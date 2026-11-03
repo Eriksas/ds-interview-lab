@@ -39,7 +39,7 @@
       desc: '拖动阈值看混淆矩阵、精确率、召回率、ROC 和 PR 曲线；类别不平衡时看 PR。' },
     { id: 'bias-variance', title: '偏差-方差与正则化', group: 'ml', freq: 2, minutes: 20, ready: false, verify: '15_bias_variance',
       desc: '多项式拟合的欠拟合 / 过拟合；L1 把系数压到 0，L2 只缩小。' },
-    { id: 'clt', title: '中心极限定理与置信区间', group: 'stat', freq: 3, minutes: 20, ready: false, verify: '09_clt',
+    { id: 'clt', title: '中心极限定理与置信区间', group: 'stat', freq: 3, minutes: 20, ready: true, verify: '09_clt',
       desc: '偏态分布的样本均值怎样趋近正态；95% 置信区间的“95%”到底指什么。' },
     { id: 'flashcards', title: '闪卡总复习', group: 'review', freq: 0, minutes: 15, ready: false,
       desc: '汇总所有页面的自测题，随机抽题。' },

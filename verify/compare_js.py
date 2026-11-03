@@ -186,6 +186,16 @@ for tag, reps in [("default", 400), ("big", 2000)]:
     rr = e["naive"] / e["true"]
     mc(f"delta.ratio_naive_true_{tag}", rr, rr / np.sqrt(2 * (reps - 1)))  # 标准差估计的相对误差约 1/sqrt(2(reps-1))
 
+
+# ---------- 页面 9 ----------
+m9 = importlib.import_module("09_clt")
+for d, n, reps in [("normal", 30, 4000), ("normal", 30, 20000), ("lognorm", 10, 20000), ("exp", 30, 20000), ("bern", 100, 20000)]:
+    cv = m9.coverage(d, n, reps, np.random.default_rng(SEED))
+    mc(f"clt.cover_{d}_{n}_{reps}", *prop(round(cv * reps), reps))
+ms = m9.draw("exp", (20000, 30), np.random.default_rng(SEED)).mean(axis=1)
+mc("clt.exp30_mean", ms.mean(), ms.std(ddof=1) / np.sqrt(20000))
+mc("clt.exp30_sd", ms.std(ddof=1), ms.std(ddof=1) / np.sqrt(2 * 19999))
+
 # ---------- 输出 ----------
 print("浏览器模拟（Node 运行同一份 JS）vs Python（numpy）对照")
 print("公式类：差异 ≤ 容差；模拟类：差异 ≤ 3 × 合并蒙特卡洛标准误\n")

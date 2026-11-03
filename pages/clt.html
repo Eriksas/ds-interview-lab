@@ -1,0 +1,122 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>中心极限定理与置信区间 · DS 面试实验室</title>
+<meta name="description" content="从偏态分布抽样，看样本均值怎样趋近正态；反复抽样，看 95% 置信区间的覆盖率。">
+<script>try{var t=localStorage.getItem('dsil.theme');t=t&&JSON.parse(t);if(t==='light'||t==='dark')document.documentElement.setAttribute('data-theme',t)}catch(e){}</script>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.css">
+<link rel="stylesheet" href="../assets/css/site.css">
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.9.0/d3.min.js"></script>
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.js"></script>
+<script defer src="../assets/js/core.js"></script>
+<script defer src="../assets/js/registry.js"></script>
+<script defer src="../assets/js/quiz.js"></script>
+<script defer src="../assets/js/pages/clt.js"></script>
+</head>
+<body data-page="clt">
+<main>
+  <h1>中心极限定理与置信区间</h1>
+  <p class="subtitle">统计基础 · 面试频率高 · 约 20 分钟</p>
+
+  <section class="card intuition">
+    <h2><span class="num">1</span>一句话直觉</h2>
+    <p>不管单个数据长什么样，很多个数据的平均值会越来越像正态分布，但“多少个才够”取决于原始数据有多偏。</p>
+    <p>95% 置信区间的“95%”说的是方法：反复抽样、每次都这样算区间，大约 95% 的区间会盖住真值。</p>
+  </section>
+
+  <section class="card lab">
+    <h2><span class="num">2</span>交互实验 <span class="tag-sim">模拟</span></h2>
+
+    <h3>实验 1：样本均值怎样变成正态</h3>
+    <div id="c1"></div>
+    <div class="chart" id="ch0"></div>
+    <div class="chart" id="ch1"></div>
+    <div id="lg1"></div>
+    <div class="readout" id="r1"></div>
+    <div class="btnrow">
+      <button class="btn primary" id="b1-again" type="button">再模拟一次</button>
+      <button class="btn" id="b1-reset" type="button">重置</button>
+    </div>
+    <div class="tasks">
+      <details class="try"><summary>指数分布：把 n 从 10 拖到 30、再到 100，样本均值的偏度怎么变？</summary>
+        <div class="ans">0.63 → 0.37 → <strong>0.20</strong>（偏度 = 2/√n）。n=30 时直方图仍然能看出右偏，n=100 才比较对称。</div></details>
+      <details class="try"><summary>切到“0/1 稀疏（2%）”，n=30 时像正态吗？大约要多少样本？</summary>
+        <div class="ans">不像：n=30 时大多数样本里一个 1 都没有，偏度 1.25。偏度降到 0.2 以下大约要 <strong>n ≥ 1,200</strong>。转化率很低的指标，样本少时不能直接套正态近似。</div></details>
+      <details class="try"><summary>切到“打赏金额”，n=1,000 够不够？</summary>
+        <div class="ans">还不够：总体偏度约 39，n=1,000 时样本均值的偏度仍有 1.24，大约要 <strong>n ≥ 38,000</strong>。这就是打赏、消费类长尾指标要做截断 / 缩尾、对数变换或加大样本的原因。</div></details>
+    </div>
+
+    <h3>实验 2：95% 置信区间的“95%”是什么</h3>
+    <p class="note">每次从总体抽 n 个样本，用 t 分布算一个 95% 区间。下面是 100 次抽样的 100 个区间。</p>
+    <div id="c2"></div>
+    <div class="chart" id="ch2"></div>
+    <div id="lg2"></div>
+    <div class="readout" id="r2"></div>
+    <div class="btnrow">
+      <button class="btn primary" id="b2-again" type="button">再抽 100 次</button>
+      <button class="btn" id="b2-reset" type="button">重置</button>
+    </div>
+    <div class="tasks">
+      <details class="try"><summary>正态总体、n=30：100 个区间里大约几个没盖住真值？多点几次“再抽 100 次”。</summary>
+        <div class="ans">平均约 <strong>5 个</strong>（2 万次模拟的覆盖率 95.2%），每一批会在 1–10 个之间波动。没盖住的区间并没有“算错”，它们只是碰上了不太典型的样本。</div></details>
+      <details class="try"><summary>切到“对数正态”、n=10，覆盖率还是 95% 吗？n 拖到 200 呢？</summary>
+        <div class="ans">n=10 时只有约 <strong>84%</strong>，n=200 时约 93%。t 区间的 95% 依赖“样本均值近似正态”，原始数据越偏、样本越少，实际覆盖率越低于名义水平。</div></details>
+      <details class="try"><summary>某次算出区间 [1.2, 3.4]，能说“真值有 95% 的概率在 1.2 到 3.4 之间”吗？</summary>
+        <div class="ans">不能（在频率学派的框架下）。真值是一个固定的数，这个区间也已经算出来了，真值要么在里面、要么不在。95% 描述的是“这套方法”：反复抽样时，约 95% 的区间会盖住真值。想说“真值落在区间里的概率”，需要贝叶斯的可信区间，并且要有先验。</div></details>
+    </div>
+  </section>
+
+  <section class="card formulas">
+    <h2><span class="num">3</span>关键公式</h2>
+    <div class="formula">
+      <div class="texd">\bar X\ \overset{\text{近似}}{\sim}\ N\!\left(\mu,\ \frac{\sigma^2}{n}\right)</div>
+      <p class="plain">中心极限定理：样本独立、总体方差有限时，样本均值近似正态，标准差（标准误）是 σ/√n。</p>
+    </div>
+    <div class="formula">
+      <div class="texd">\mathrm{Skew}(\bar X)=\frac{\gamma}{\sqrt n}</div>
+      <p class="plain">样本均值的偏度随 √n 缩小。总体偏度 γ 越大，要的 n 越多：想让偏度降到 0.2，大约需要 n ≥ (γ/0.2)²。</p>
+    </div>
+    <div class="formula">
+      <div class="texd">\bar x\ \pm\ t_{0.975,\,n-1}\cdot\frac{s}{\sqrt n}</div>
+      <p class="plain">95% t 置信区间。s 是样本标准差（分母 n−1）。</p>
+    </div>
+    <div class="formula">
+      <div class="texd">P\big(L\le\mu\le U\big)=0.95</div>
+      <p class="plain">随机的是区间的两端 L、U（抽样之前它们还没确定），μ 是固定的。抽完样、算出具体的数之后，这个概率说法就不再适用于这一个区间。</p>
+    </div>
+  </section>
+
+  <section class="card pitch">
+    <h2><span class="num">4</span>面试口述版（30 秒）</h2>
+    <blockquote>中心极限定理说，样本独立、方差有限时，样本均值近似服从均值为 μ、方差为 σ²/n 的正态分布，所以 AB 实验可以用 z 或 t 检验。“n≥30”只是对近似对称数据的经验值：偏度越大要的样本越多，比如 2% 的转化率要上千个样本，打赏这种长尾指标要几万。大数定律说的是样本均值会收敛到真值，没有 30 这样的门槛。95% 置信区间的含义是：反复抽样、每次都这样构造区间，约 95% 的区间会包含真值；对已经算出来的某一个区间，不能说真值有 95% 的概率落在里面。</blockquote>
+  </section>
+
+  <section class="card myths">
+    <h2><span class="num">5</span>常见误区</h2>
+    <ul>
+      <li><span class="wrong">✗ “n≥30 就可以用正态近似”。</span><br><span class="right">✓</span> 只适用于近似对称的数据。指数分布要约 100，2% 的转化率要上千，打赏金额要几万（实验 1）。</li>
+      <li><span class="wrong">✗ “大数定律也要求 n≥30”。</span><br><span class="right">✓</span> 大数定律是极限性质（n 越大，样本均值越接近真值），没有固定门槛；中心极限定理说的是样本均值围绕真值波动的<strong>形状</strong>。</li>
+      <li><span class="wrong">✗ “真值有 95% 的概率落在这个区间里”。</span><br><span class="right">✓</span> 95% 是方法的长期覆盖率；某一个具体区间要么盖住、要么没盖住。</li>
+      <li><span class="wrong">✗ “中心极限定理说明，样本多了数据本身就会变成正态”。</span><br><span class="right">✓</span> 数据本身的分布不变（实验 1 上面那张图不会变），变成正态的是<strong>样本均值</strong>的分布。</li>
+      <li><span class="wrong">✗ “t 区间总能保证 95% 覆盖率”。</span><br><span class="right">✓</span> 只有在样本均值近似正态时才成立；强偏态、小样本时覆盖率会明显低于 95%（实验 2）。</li>
+    </ul>
+  </section>
+
+  <section class="card quiz">
+    <h2><span class="num">6</span>自测题</h2>
+    <div id="quiz-list"></div>
+  </section>
+
+  <section class="card project">
+    <h2><span class="num">7</span>和 X5 项目的联系</h2>
+    <ul>
+      <li>X5 的指标是购买与否（0/1），购买率约 60%，每组约 10 万人。0/1 数据偏度只有约 −0.42，除以 √100000 后约为 −0.001，所以用正态近似的 z 检验没有问题：ATE 3.32 个百分点，95% 置信区间 [2.90, 3.75]。</li>
+      <li>Qini 系数这种复杂统计量没有现成的标准误公式，项目用 bootstrap 重抽 500 次得到 95% 区间 [0.0068, 0.0195]。它的解释和本页一样：这是“方法”的覆盖率，不是“真值落在区间里的概率”。</li>
+    </ul>
+    <p class="note">数字来自项目的 <code>results/stage1_ab_test.json</code> 和 <code>results/stage4_summary.json</code>。</p>
+  </section>
+</main>
+</body>
+</html>

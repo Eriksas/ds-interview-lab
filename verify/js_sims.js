@@ -155,4 +155,18 @@ if (Lab.sim.delta) {
   }
 }
 
+
+/* ---------- 页面 9：中心极限定理与置信区间 ---------- */
+if (Lab.sim.clt) {
+  const C = Lab.sim.clt;
+  for (const [d, n, reps] of [['normal', 30, 4000], ['normal', 30, 20000], ['lognorm', 10, 20000], ['exp', 30, 20000], ['bern', 100, 20000]]) {
+    const r = C.intervals(d, n, reps, 51);
+    out[`clt.cover_${d}_${n}_${reps}`] = prop(Math.round(r.coverage * reps), reps);
+  }
+  const ms = C.sampleMeans('exp', 30, 20000, 52);
+  const sd = Math.sqrt(Lab.stats.variance(ms));
+  out['clt.exp30_mean'] = { value: Lab.stats.mean(ms), se: sd / Math.sqrt(20000) };
+  out['clt.exp30_sd'] = { value: sd, se: sd / Math.sqrt(2 * 19999) };
+}
+
 console.log(JSON.stringify(out, null, 1));

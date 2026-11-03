@@ -17,7 +17,7 @@
       desc: "每天看一次累计数据，假阳性率涨到多少；Pocock 和 O'Brien-Fleming 门槛。" },
     { id: 'multiple', title: '多重检验', group: 'ab', freq: 2, minutes: 20, ready: true, verify: '03_multiple',
       desc: 'FWER 和 FDR 的区别；拖动 p 值，对比 Bonferroni、Holm 和 BH 各拒绝哪些。' },
-    { id: 'cuped', title: 'CUPED 方差缩减', group: 'ab', freq: 2, minutes: 20, ready: false, verify: '04_cuped',
+    { id: 'cuped', title: 'CUPED 方差缩减', group: 'ab', freq: 2, minutes: 20, ready: true, verify: '04_cuped',
       desc: '拖动实验前后指标的相关系数，看方差变成 1−ρ²、样本量省多少。' },
     { id: 'pitfalls', title: '实验结果的陷阱', group: 'ab', freq: 3, minutes: 30, ready: false, verify: '05_pitfalls',
       desc: '只看付费用户的选择偏差、放量时的辛普森悖论、赢家诅咒、新奇效应。' },

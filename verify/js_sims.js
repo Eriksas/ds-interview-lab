@@ -67,4 +67,20 @@ if (Lab.sim.multiple) {
   }
 }
 
+/* ---------- 页面 4：CUPED ---------- */
+if (Lab.sim.cuped) {
+  const C = Lab.sim.cuped;
+  for (const [tag, reps] of [['default', 300], ['big', 4000]]) {
+    const r = C.repeat(500, 0.7, 2, reps, 43);
+    out[`cuped.power_raw_${tag}`] = prop(Math.round(r.powRaw * reps), reps);
+    out[`cuped.power_cv_${tag}`] = prop(Math.round(r.powCv * reps), reps);
+    const m = Lab.stats.mean(r.cv), sd = Math.sqrt(Lab.stats.variance(r.cv));
+    out[`cuped.mean_cv_${tag}`] = { value: m, se: sd / Math.sqrt(reps), n: reps };
+  }
+  const a = C.repeat(500, 0.7, 0, 20000, 44);
+  out['cuped.aa_fpr_cv'] = prop(Math.round(a.powCv * 20000), 20000);
+  out['cuped.n_needed_raw'] = { value: C.nNeeded(2, 1) };
+  out['cuped.n_needed_cv'] = { value: C.nNeeded(2, 0.51) };
+}
+
 console.log(JSON.stringify(out, null, 1));

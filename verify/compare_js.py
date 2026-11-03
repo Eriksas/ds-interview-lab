@@ -105,6 +105,18 @@ for tag, n in [("default", 4000), ("big", 40000)]:
         js[f"multiple.{k}_fdr_{tag}"]["se"] = float(arr.std(ddof=1) / np.sqrt(n))  # 两边模拟次数相同，用 Python 的方差近似 JS 的标准误
         mc(f"multiple.{k}_fdr_{tag}", arr.mean(), arr.std(ddof=1) / np.sqrt(n))
 
+# ---------- 页面 4 ----------
+m4 = importlib.import_module("04_cuped")
+for tag, reps in [("default", 300), ("big", 4000)]:
+    r = m4.repeat(500, 0.7, 2.0, reps, np.random.default_rng(SEED))
+    mc(f"cuped.power_raw_{tag}", *prop(r["rej_raw"].sum(), reps))
+    mc(f"cuped.power_cv_{tag}", *prop(r["rej_cv"].sum(), reps))
+    mc(f"cuped.mean_cv_{tag}", r["ate_cv"].mean(), r["ate_cv"].std(ddof=1) / np.sqrt(reps))
+r = m4.repeat(500, 0.7, 0.0, 20000, np.random.default_rng(SEED))
+mc("cuped.aa_fpr_cv", *prop(r["rej_cv"].sum(), 20000))
+det("cuped.n_needed_raw", float(np.ceil(m4.n_needed(20, 2.0))), tol=0)
+det("cuped.n_needed_cv", float(np.ceil(m4.n_needed(20, 2.0, 0.51))), tol=0)
+
 # ---------- 输出 ----------
 print("浏览器模拟（Node 运行同一份 JS）vs Python（numpy）对照")
 print("公式类：差异 ≤ 容差；模拟类：差异 ≤ 3 × 合并蒙特卡洛标准误\n")

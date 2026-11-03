@@ -1,0 +1,113 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CUPED 方差缩减 · DS 面试实验室</title>
+<meta name="description" content="拖动实验前后指标的相关系数，看方差变成 1−ρ²、所需样本量降多少。">
+<script>try{var t=localStorage.getItem('dsil.theme');t=t&&JSON.parse(t);if(t==='light'||t==='dark')document.documentElement.setAttribute('data-theme',t)}catch(e){}</script>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.css">
+<link rel="stylesheet" href="../assets/css/site.css">
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.9.0/d3.min.js"></script>
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.js"></script>
+<script defer src="../assets/js/core.js"></script>
+<script defer src="../assets/js/registry.js"></script>
+<script defer src="../assets/js/quiz.js"></script>
+<script defer src="../assets/js/pages/cuped.js"></script>
+</head>
+<body data-page="cuped">
+<main>
+  <h1>CUPED 方差缩减</h1>
+  <p class="subtitle">AB 实验 · 面试频率中 · 约 20 分钟</p>
+
+  <section class="card intuition">
+    <h2><span class="num">1</span>一句话直觉</h2>
+    <p>一个用户实验期看得多，很大程度是因为他本来就看得多。CUPED（Controlled-experiment Using Pre-Experiment Data，用实验前数据做调整）先把“本来就有的差异”扣掉，剩下的噪声小了，同样的样本更容易测出效果。</p>
+  </section>
+
+  <section class="card lab">
+    <h2><span class="num">2</span>交互实验 <span class="tag-sim">模拟</span></h2>
+    <p class="note">模拟指标：人均观看时长（分钟），实验前和实验期的标准差都是 20 分钟。实验组真实多看 τ 分钟。</p>
+    <div id="c1"></div>
+    <div class="btnrow">
+      <button class="btn primary" id="b1-again" type="button">再模拟一次</button>
+      <button class="btn" id="b1-reset" type="button">重置</button>
+    </div>
+    <h3>① 一次实验：实验前 vs 实验期</h3>
+    <div class="chart" id="ch1"></div>
+    <div id="lg1"></div>
+    <p class="note small">CUPED 后的指标 <span class="tex">Y_{cv}=Y-	heta(X-ar X)</span>：把每个点沿着回归线的方向“拉平”，用户之间本来的差异就被扣掉了。</p>
+    <h3>② 这次实验的估计和 95% 置信区间</h3>
+    <div class="chart" id="ch2"></div>
+    <div class="readout" id="r1"></div>
+    <h3>③ 重复做很多次实验</h3>
+    <div class="chart" id="ch3"></div>
+    <div id="lg3"></div>
+    <div class="readout" id="r3"></div>
+    <p class="note small" id="cap3"></p>
+    <h3>④ 相关系数和省下的样本</h3>
+    <div class="chart" id="ch4"></div>
+    <div class="tasks">
+      <details class="try"><summary>默认 ρ=0.7、每组 500 人、τ=2 分钟：不调整和 CUPED 的功效各约多少？</summary>
+        <div class="ans">理论功效：不调整约 <strong>35%</strong>，CUPED 约 <strong>60%</strong>（重复 4,000 次模拟为 36% 和 59%）。要达到 80% 功效，每组样本从 1,570 降到 801，几乎省一半，因为 1−0.7²=0.51。</div></details>
+      <details class="try"><summary>把 ρ 拖到 0.5，方差减少多少？再拖到 0.9 呢？</summary>
+        <div class="ans">ρ=0.5 时只减少 <strong>25%</strong>（剩 1−0.25=75%），所需样本 1,178；ρ=0.9 时减少 <strong>81%</strong>，所需样本只要 299。降幅是 ρ²，不是 ρ：相关系数要比较高，CUPED 才划算。</div></details>
+      <details class="try"><summary>把 τ 拖到 0（A/A），看图 ③ 里 CUPED 估计的中心在哪里？</summary>
+        <div class="ans">两条分布都以 <strong>0</strong> 为中心，显著比例都约 5%。CUPED 只让分布变窄，不移动中心：随机实验里不调整也是无偏的，CUPED 的作用是降方差。</div></details>
+    </div>
+  </section>
+
+  <section class="card formulas">
+    <h2><span class="num">3</span>关键公式</h2>
+    <div class="formula">
+      <div class="texd">Y_{cv}=Y-\theta\,(X-\bar X),\qquad \theta=\frac{\mathrm{Cov}(X,Y)}{\mathrm{Var}(X)}</div>
+      <p class="plain">X 是实验前的同一指标（或任何不受实验影响的变量）。θ 就是 Y 对 X 回归的斜率，用两组合并的数据估计。</p>
+    </div>
+    <div class="formula">
+      <div class="texd">\mathrm{Var}(Y_{cv})=\mathrm{Var}(Y)\,(1-\rho^2)</div>
+      <p class="plain">方差只剩 1−ρ²，所需样本量也按这个比例减少；标准误变成原来的 √(1−ρ²)。</p>
+    </div>
+    <div class="formula">
+      <div class="texd">E\big[\bar Y_{cv,T}-\bar Y_{cv,C}\big]=E\big[\bar Y_T-\bar Y_C\big]-\theta\,E\big[\bar X_T-\bar X_C\big]=\tau</div>
+      <p class="plain">随机分组下两组实验前的均值期望相同，调整项的期望是 0，所以估计仍然无偏。</p>
+    </div>
+    <div class="formula">
+      <div class="texd">Y_i=\alpha+\tau\,T_i+\theta\,X_i+\varepsilon_i</div>
+      <p class="plain">CUPED 和“回归里加实验前协变量”（ANCOVA，协方差分析）基本等价。用 Stata 写就是 <code>reg y treat x_pre, vce(robust)</code>，treat 的系数就是效应。多个协变量就一起放进回归。</p>
+    </div>
+  </section>
+
+  <section class="card pitch">
+    <h2><span class="num">4</span>面试口述版（30 秒）</h2>
+    <blockquote>CUPED 用实验前的数据降低方差。做法是 Y_cv = Y − θ(X − X̄)，X 通常是同一指标在实验前的值，θ 是 Y 对 X 的回归斜率。调整后方差变成原来的 1−ρ²，ρ 是前后指标的相关系数，比如 ρ=0.7 时方差减少约一半，同样功效下样本量也省一半。因为是随机实验，两组 X 的期望相同，调整不会引入偏差，估计仍然无偏，它的作用只是降方差。要注意协变量必须不受实验影响，一般只用实验开始前的数据；新用户没有历史数据时可以用其他实验前特征或填补。它本质上就是回归里加了实验前协变量。</blockquote>
+  </section>
+
+  <section class="card myths">
+    <h2><span class="num">5</span>常见误区</h2>
+    <ul>
+      <li><span class="wrong">✗ “加协变量是为了消除两组的偏差，不加就有偏”。</span><br><span class="right">✓</span> 随机实验里不加协变量也是无偏的（图 ③ 两条分布中心相同）。CUPED 的作用是降方差、提高功效。</li>
+      <li><span class="wrong">✗ “ρ=0.5 时方差减半”。</span><br><span class="right">✓</span> 方差减少的比例是 ρ²：ρ=0.5 只减少 25%，ρ=0.7 才减少约一半。</li>
+      <li><span class="wrong">✗ “随便挑一个和结果相关的变量都能当协变量”。</span><br><span class="right">✓</span> 协变量必须不受实验影响，一般只用实验开始前的数据。用实验期间的变量（比如实验期活跃天数）做调整，会把一部分真实效应也扣掉，引入偏差。</li>
+      <li><span class="wrong">✗ “CUPED 只能用于连续指标”。</span><br><span class="right">✓</span> 0/1 指标（转化率、购买率）同样可以，回归调整对它们一样成立；有的实验平台不支持，是工程实现的限制。</li>
+      <li><span class="wrong">✗ 把 θ 说成“k 值”或“修正系数随便取”。</span><br><span class="right">✓</span> θ 是 Cov(X,Y)/Var(X)，也就是回归斜率；这个取值正好让调整后的方差最小。</li>
+    </ul>
+  </section>
+
+  <section class="card quiz">
+    <h2><span class="num">6</span>自测题</h2>
+    <div id="quiz-list"></div>
+  </section>
+
+  <section class="card project">
+    <h2><span class="num">7</span>和 X5 项目的联系</h2>
+    <ul>
+      <li>项目用<strong>实验前交易次数</strong>做 CUPED：它和购买的相关系数平方是 0.127，所以方差减少 <strong>12.7%</strong>，等效样本量 ×1.15。相关性一般，所以收益有限，这正好对应“降幅是 ρ²”。</li>
+      <li>把 7 个实验前指标一起放进回归调整，等效样本量 ×1.21，最小可检测效应从 <strong>0.61</strong> 降到 <strong>0.55</strong> 个百分点。</li>
+      <li><strong>坏控制变量</strong>：客户表里的“首次兑换积分日期”有一部分发生在短信之后，实验组“截止日后才首次兑换”的比例比对照组高 0.39 个百分点（p=0.006），说明它受短信影响，不能当协变量。这是“协变量必须不受实验影响”的真实例子。</li>
+      <li>购买是 0/1 指标，照样能做 CUPED，这也回答了“二值指标能不能用 CUPED”。</li>
+    </ul>
+    <p class="note">数字来自项目的 <code>results/stage1_ab_test.json</code>。</p>
+  </section>
+</main>
+</body>
+</html>

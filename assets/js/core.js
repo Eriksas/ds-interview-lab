@@ -506,6 +506,21 @@
       },
     };
   };
+  /* 拖滑块时每帧最多重画一次 */
+  Lab.throttle = function (fn) {
+    let pending = false;
+    const run = () => {
+      if (!pending) return;
+      pending = false;
+      fn();
+    };
+    return function () {
+      if (pending) return;
+      pending = true;
+      requestAnimationFrame(run);
+      setTimeout(run, 80); // 页面在后台时 rAF 不触发，兜底
+    };
+  };
   /* 容器宽度变化时重画 */
   Lab.watch = function (elm, fn) {
     if (typeof elm === 'string') elm = Lab.$(elm);

@@ -1,0 +1,111 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>倾向得分匹配 PSM · DS 面试实验室</title>
+<meta name="description" content="倾向得分的重叠图、卡钳、有放回与无放回匹配的偏差-方差取舍、匹配前后的标准化均值差。">
+<script>try{var t=localStorage.getItem('dsil.theme');t=t&&JSON.parse(t);if(t==='light'||t==='dark')document.documentElement.setAttribute('data-theme',t)}catch(e){}</script>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.css">
+<link rel="stylesheet" href="../assets/css/site.css">
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.9.0/d3.min.js"></script>
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.js"></script>
+<script defer src="../assets/js/core.js"></script>
+<script defer src="../assets/js/registry.js"></script>
+<script defer src="../assets/js/quiz.js"></script>
+<script defer src="../assets/js/pages/psm.js"></script>
+</head>
+<body data-page="psm">
+<main>
+  <h1>倾向得分匹配 PSM</h1>
+  <p class="subtitle">因果推断 · 面试频率高 · 约 25 分钟</p>
+
+  <section class="card intuition">
+    <h2><span class="num">1</span>一句话直觉</h2>
+    <p>参加活动的人本来就更活跃，直接比会把“活跃”算成活动的效果。给每个参加者找一个“参加概率差不多、但没参加”的人来比，就能去掉看得见的那部分差异；看不见的差异，匹配管不了。</p>
+  </section>
+
+  <section class="card lab">
+    <h2><span class="num">2</span>交互实验 <span class="tag-sim">模拟</span></h2>
+    <p class="note">600 个用户，越活跃、历史消费越高，越可能参加活动。参加活动的真实效应是 +1。用逻辑回归估计倾向得分（参加的概率），再在 logit 倾向得分上做 1:1 最近邻匹配。</p>
+    <div id="c1"></div>
+    <h3>① 倾向得分的重叠</h3>
+    <div class="chart" id="ch1"></div>
+    <div id="lg1"></div>
+    <div class="readout" id="r1"></div>
+    <h3>② 匹配前后的平衡（标准化均值差）</h3>
+    <div class="chart" id="ch2"></div>
+    <div id="lg2"></div>
+    <p class="note small">SMD = 两组均值差 ÷ 合并标准差（都用匹配前的标准差做分母）。常用标准：|SMD| &lt; 0.1 算平衡。</p>
+    <div class="btnrow">
+      <button class="btn primary" id="b1-again" type="button">再模拟一次</button>
+      <button class="btn" id="b1-reset" type="button">重置</button>
+    </div>
+    <h3>③ 有放回 vs 无放回：偏差和方差</h3>
+    <div class="btnrow"><button class="btn primary" id="b2-rep" type="button">重复 200 次，比较有放回和无放回</button></div>
+    <div class="tbl-wrap" id="t2"></div>
+    <div class="tasks">
+      <details class="try"><summary>默认参数：直接比较参加和没参加的人，差多少？匹配后呢？</summary>
+        <div class="ans">直接比约 <strong>3.3</strong>（seed 42 为 3.35；重复 1,000 次平均偏差 +2.4），把“本来就活跃”算进了效果。匹配后接近真实的 1（seed 42 无放回 1.07），三个变量的 |SMD| 都降到 0.1 以下。</div></details>
+      <details class="try"><summary>把卡钳拖到“不设卡钳”，点“重复 200 次”。无放回的偏差是多少？</summary>
+        <div class="ans">无放回偏差约 <strong>+1.2</strong>，有放回只有约 +0.08（verify 重复 1,000 次）。倾向得分高的地方对照组很少，无放回时先到的处理组把好对照用完了，后面的只能配到很远的人。<strong>有放回偏差更小</strong>。</div></details>
+      <details class="try"><summary>恢复卡钳 0.2，再点“重复 200 次”。现在两种方法的标准差谁大？</summary>
+        <div class="ans">有放回的标准差约 <strong>0.16</strong>，无放回约 <strong>0.13</strong>：有放回时少数对照被反复使用，有效样本变少，<strong>方差更大</strong>。这就是偏差-方差的取舍。卡钳把配得太远的处理组扔掉，两种方法的偏差都降到 0.03 以内。</div></details>
+      <details class="try"><summary>把选择强度拖到 3，看重叠图和“处理组匹配上”的人数。</summary>
+        <div class="ans">两组的倾向得分几乎不重叠，很多处理组找不到合适的对照，被卡钳扔掉。这时估计的只是“重叠区域里那部分人”的效果，不再是全体处理组的 ATT，汇报时要说清楚。</div></details>
+    </div>
+  </section>
+
+  <section class="card formulas">
+    <h2><span class="num">3</span>关键公式</h2>
+    <div class="formula">
+      <div class="texd">e(x)=P(T=1\mid X=x)</div>
+      <p class="plain">倾向得分：给定可观测特征时参加处理的概率。常用逻辑回归估计，在 logit e(x) 上匹配。</p>
+    </div>
+    <div class="formula">
+      <div class="texd">\big(Y(0),Y(1)\big)\perp T\mid X\ \Rightarrow\ \big(Y(0),Y(1)\big)\perp T\mid e(X)</div>
+      <p class="plain">如果给定 X 后处理和潜在结果无关（无混淆，即所有混杂都被观测到），给定倾向得分后也一样，所以只需在一维的 e(X) 上匹配。</p>
+    </div>
+    <div class="formula">
+      <div class="texd">\widehat{\mathrm{ATT}}=\frac{1}{n_m}\sum_{i\in\text{匹配上的处理组}}\big(Y_i-Y_{j(i)}\big)</div>
+      <p class="plain">每个处理组成员减去配给他的对照，再平均。卡钳宽度常取 logit 倾向得分标准差的 0.2 倍。</p>
+    </div>
+    <div class="formula">
+      <div class="texd">\mathrm{SMD}=\frac{\bar x_T-\bar x_C}{\sqrt{(s_T^2+s_C^2)/2}}</div>
+      <p class="plain">用 SMD 而不是 t 检验的 p 值判断平衡，因为 p 值会随样本量变化。</p>
+    </div>
+  </section>
+
+  <section class="card pitch">
+    <h2><span class="num">4</span>面试口述版（30 秒）</h2>
+    <blockquote>PSM 用于没有随机分组的观察数据。先用逻辑回归等模型估计每个人接受处理的概率，也就是倾向得分，再给每个处理组成员找倾向得分相近的对照，比较结果差异，得到处理组的平均效应 ATT。关键假设是无混淆，即影响处理和结果的变量都观测到了，以及两组倾向得分有重叠。实施时要设卡钳，常用 logit 倾向得分标准差的 0.2 倍；有放回匹配偏差更小但方差更大；匹配后用标准化均值差检查平衡，小于 0.1 算平衡。它只能处理看得见的混杂，看不见的仍会带来偏差，所以结论要说清楚是在什么假设下的因果。</blockquote>
+  </section>
+
+  <section class="card myths">
+    <h2><span class="num">5</span>常见误区</h2>
+    <ul>
+      <li><span class="wrong">✗ “有放回匹配偏差更大、方差更小”。</span><br><span class="right">✓</span> 说反了。有放回：每个处理组都能配到最近的对照，<strong>偏差更小</strong>；同一个对照被反复用，<strong>方差更大</strong>。无放回反之（实验 ③）。</li>
+      <li><span class="wrong">✗ “能放进模型的变量越多越好”。</span><br><span class="right">✓</span> 只放同时影响处理和结果的混杂变量（以及只影响结果的变量）。只影响处理、不影响结果的变量（类似工具变量）会增加方差，在有未观测混杂时还可能放大偏差；处理之后才发生的变量绝对不能放。</li>
+      <li><span class="wrong">✗ “匹配后两组没有显著差异（p&gt;0.05），所以平衡了”。</span><br><span class="right">✓</span> p 值受样本量影响，样本小时什么都不显著。用 SMD 判断平衡。</li>
+      <li><span class="wrong">✗ “PSM 之后得到的就是因果效应”。</span><br><span class="right">✓</span> 只有在“所有混杂都被观测到”的假设下才是。PSM 处理不了未观测混杂；可以做敏感性分析（未观测混杂要多强才能推翻结论）。</li>
+      <li><span class="wrong">✗ 卡钳扔掉了一些处理组，但还说估计的是全体处理组的 ATT。</span><br><span class="right">✓</span> 扔掉之后估计的是重叠区域内的效应，要说明匹配上的比例和人群特征。</li>
+    </ul>
+    <p class="note">Stata 对照：<code>teffects psmatch (y) (t x1 x2), atet</code>（有放回）；社区命令 <code>psmatch2</code> 可以设 <code>caliper()</code> 和 <code>noreplacement</code>。</p>
+  </section>
+
+  <section class="card quiz">
+    <h2><span class="num">6</span>自测题</h2>
+    <div id="quiz-list"></div>
+  </section>
+
+  <section class="card project">
+    <h2><span class="num">7</span>和 X5 项目的联系</h2>
+    <ul>
+      <li>X5 是随机实验，不需要 PSM；但项目检查随机化的方法和 PSM 检查平衡的方法一样：14 个变量的 |SMD| 最大 0.0085，远小于 0.1。</li>
+      <li>如果没有随机分组、只知道“谁收到了短信”，就要像本页一样估计“收到短信的概率”，用实验前的交易特征做匹配；而“首次兑换积分日期”这种有一部分发生在短信之后的变量，就是“处理后变量”，不能放进倾向得分模型。</li>
+    </ul>
+    <p class="note">数字来自项目的 <code>results/stage1_ab_test.json</code>。</p>
+  </section>
+</main>
+</body>
+</html>

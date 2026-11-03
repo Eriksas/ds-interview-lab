@@ -186,4 +186,17 @@ if (Lab.sim.did) {
   out['did.bias_s02_mean'] = { value: m, se: sd / Math.sqrt(2000) };
 }
 
+
+/* ---------- 页面 11：PSM ---------- */
+if (Lab.sim.psm) {
+  const P = Lab.sim.psm;
+  for (const [cal, tag] of [[0.2, 'cal02'], [Infinity, 'nocal']]) {
+    const r = P.repeat(600, 1.5, cal, 300, 61);
+    for (const k of ['naive', 'repl', 'norepl']) {
+      out[`psm.${tag}_${k}_bias`] = { value: r[k].bias, se: r[k].sd / Math.sqrt(300) };
+      out[`psm.${tag}_${k}_sd`] = { value: r[k].sd, se: r[k].sd / Math.sqrt(2 * 299) };
+    }
+  }
+}
+
 console.log(JSON.stringify(out, null, 1));

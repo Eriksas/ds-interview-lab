@@ -211,6 +211,16 @@ rng10 = np.random.default_rng(SEED)
 errs = np.array([m10.did2x2(m10.panel2(30, 0.2, 2.0, rng10)) - 2.0 for _ in range(2000)])
 mc("did.bias_s02_mean", errs.mean(), errs.std(ddof=1) / np.sqrt(2000))
 
+
+# ---------- 页面 11 ----------
+m11 = importlib.import_module("11_psm")
+for cal, tag in [(0.2, "cal02"), (np.inf, "nocal")]:
+    r = m11.repeat(600, 1.5, cal, 300, np.random.default_rng(SEED))
+    for k, key in [("naive", "naive"), ("repl", True), ("norepl", False)]:
+        a = r[key][np.isfinite(r[key])]
+        mc(f"psm.{tag}_{k}_bias", a.mean() - 1, a.std(ddof=1) / np.sqrt(a.size))
+        mc(f"psm.{tag}_{k}_sd", a.std(ddof=1), a.std(ddof=1) / np.sqrt(2 * (a.size - 1)))
+
 # ---------- 输出 ----------
 print("浏览器模拟（Node 运行同一份 JS）vs Python（numpy）对照")
 print("公式类：差异 ≤ 容差；模拟类：差异 ≤ 4 × 合并蒙特卡洛标准误（上百项一起检查，用 4 倍避免多重比较误报）\n")

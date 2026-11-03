@@ -25,7 +25,7 @@
       desc: '按用户分流、按曝光算指标时，朴素标准误为什么偏小；Delta 与 Bootstrap。' },
     { id: 'did', title: '双重差分 DID', group: 'causal', freq: 3, minutes: 30, ready: true, verify: '10_did',
       desc: '平行趋势被破坏时估计偏多少；事件研究图；交错上线时 TWFE 的偏误。' },
-    { id: 'psm', title: '倾向得分匹配 PSM', group: 'causal', freq: 3, minutes: 25, ready: false, verify: '11_psm',
+    { id: 'psm', title: '倾向得分匹配 PSM', group: 'causal', freq: 3, minutes: 25, ready: true, verify: '11_psm',
       desc: '倾向得分重叠、卡钳、有放回与无放回的偏差-方差取舍、SMD 平衡图。' },
     { id: 'rdd-iv', title: '断点回归与工具变量', group: 'causal', freq: 1, minutes: 30, ready: false, verify: '12_rdd_iv',
       desc: '带宽选择、凑单让 RDD 失效；鼓励设计里的依从者和 Wald 估计（LATE）。' },

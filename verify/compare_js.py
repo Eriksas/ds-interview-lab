@@ -154,6 +154,28 @@ det("decomp.inter_base", d["inter_b"].sum(), tol=1e-12)
 d2 = m6.decompose(m6.BASE, dict(n=[40, 70, 20], r=[0.051, 0.031, 0.022]))
 det("decomp.all_up_total", d2["R2"] - d2["R1"], tol=1e-12)
 
+
+# ---------- 页面 7 ----------
+m7 = importlib.import_module("07_recsys")
+from sklearn.metrics import roc_auc_score  # noqa: E402
+A = m7.USERS["A（活跃）"]
+det("recsys.A_p3", m7.p_at_k(A["rel"], 3), tol=1e-12)
+det("recsys.A_r3", m7.r_at_k(A["rel"], 3), tol=1e-12)
+det("recsys.A_ndcg3", m7.ndcg_at_k(A["rel"], 3), tol=1e-12)
+yA = (np.array(A["rel"]) >= 1).astype(int)
+det("recsys.A_auc", roc_auc_score(yA, m7.scores(8, A["base"])), tol=1e-12)
+ys, ss, aucs, wi, wc = [], [], [], [], []
+for u in m7.USERS.values():
+    y = (np.array(u["rel"]) >= 1).astype(int)
+    s = m7.scores(8, u["base"])
+    ys.append(y); ss.append(s)
+    aucs.append(roc_auc_score(y, s)); wi.append(8); wc.append(y.sum())
+det("recsys.gauc_imp", np.average(aucs, weights=wi), tol=1e-12)
+det("recsys.gauc_clk", np.average(aucs, weights=wc), tol=1e-12)
+det("recsys.global_auc", roc_auc_score(np.concatenate(ys), np.concatenate(ss)), tol=1e-12)
+det("recsys.A_auc_tie23", roc_auc_score(yA, m7.scores(8, A["base"], ties=(2,))), tol=1e-12)
+det("recsys.funnel_ratio", 5000 * 50 / (5000 + 500 * 50), tol=1e-12)
+
 # ---------- 输出 ----------
 print("浏览器模拟（Node 运行同一份 JS）vs Python（numpy）对照")
 print("公式类：差异 ≤ 容差；模拟类：差异 ≤ 3 × 合并蒙特卡洛标准误\n")

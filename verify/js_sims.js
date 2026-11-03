@@ -123,4 +123,24 @@ if (Lab.sim.decomposition) {
   out['decomp.all_up_total'] = { value: d2.R2 - d2.R1 };
 }
 
+
+/* ---------- 页面 7：推荐与排序指标 ---------- */
+if (Lab.sim.recsys) {
+  const R = Lab.sim.recsys;
+  const users = R.USERS.map((u) => ({ rel: u.rel, base: u.base, ties: [] }));
+  const a = users[0];
+  const sA = R.scores(8, a.base, []);
+  out['recsys.A_p3'] = { value: R.pAtK(a.rel, 3) };
+  out['recsys.A_r3'] = { value: R.rAtK(a.rel, 3) };
+  out['recsys.A_ndcg3'] = { value: R.ndcgAtK(a.rel, 3) };
+  out['recsys.A_auc'] = { value: R.auc(a.rel.map((r) => (r >= 1 ? 1 : 0)), sA) };
+  const g = R.gauc(users);
+  out['recsys.gauc_imp'] = { value: g.gaucImp };
+  out['recsys.gauc_clk'] = { value: g.gaucClk };
+  out['recsys.global_auc'] = { value: g.global };
+  const tie = users.map((u, i) => (i === 0 ? { ...u, ties: [false, false, true] } : u));
+  out['recsys.A_auc_tie23'] = { value: R.gauc(tie).per[0].auc };
+  out['recsys.funnel_ratio'] = { value: R.funnelCost(5000, 500, 1, 50).ratio };
+}
+
 console.log(JSON.stringify(out, null, 1));

@@ -365,3 +365,42 @@ table.tbl { border-collapse: collapse; width: 100%; font-size: 14px; }
 .tree .tn-op { color: var(--accent-ink); font-size: 14px; }
 .tree .tn-tip { color: var(--text-2); font-size: 14px; padding: 0 10px 2px; }
 .tree .tn.leaf .tn-tip { padding: 2px 0 0; }
+
+/* ---------- 排序列表 ---------- */
+.chips { display: flex; flex-wrap: wrap; gap: 6px; margin: 6px 0; }
+.chips button {
+  border: 1px solid var(--border); background: var(--surface-2); color: var(--text-2); border-radius: 999px;
+  padding: 4px 12px; font-size: 14px; cursor: pointer; font-family: inherit; min-height: 32px;
+}
+.chips button[aria-pressed="true"] { background: var(--s2); border-color: var(--s2); color: #fff; }
+.rk-list { position: relative; margin: 8px 0; user-select: none; -webkit-user-select: none; }
+.rk-row {
+  height: 52px; display: flex; align-items: center; gap: 6px; padding: 0 4px; border-bottom: 1px solid var(--border);
+  background: var(--surface); position: relative;
+}
+.rk-row.topk { background: var(--accent-soft); }
+.rk-row.lift { box-shadow: 0 4px 14px rgba(0,0,0,0.25); z-index: 2; outline: 2px solid var(--s2); }
+.rk-handle { width: 28px; height: 40px; display: grid; place-items: center; color: var(--muted); cursor: grab; touch-action: none; font-size: 20px; flex: none; }
+.rk-list.dragging .rk-handle { cursor: grabbing; }
+.rk-pos { width: 18px; font-family: var(--mono); color: var(--text-2); font-size: 14px; flex: none; text-align: right; }
+.rk-title { flex: 1; min-width: 0; font-size: 13.5px; line-height: 1.25; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+.rk-title small { display: block; color: var(--muted); font-size: 12px; font-family: var(--mono); }
+.rk-grade, .rk-tie, .rk-move button {
+  border: 1px solid var(--border); background: var(--surface-2); color: var(--text); border-radius: 8px; font-family: inherit;
+  font-size: 12.5px; min-height: 32px; cursor: pointer; padding: 0 6px; flex: none;
+}
+.rk-grade { width: 74px; }
+.rk-grade.g0 { color: var(--muted); }
+.rk-grade.g1 { border-color: var(--s3); }
+.rk-grade.g2 { border-color: var(--s3); background: var(--s3-a); }
+.rk-grade.g3 { border-color: var(--s3); background: var(--s3); color: #fff; }
+.rk-tie[aria-pressed="true"] { background: var(--s2); border-color: var(--s2); color: #fff; }
+.rk-tie:disabled, .rk-move button:disabled { opacity: 0.35; cursor: default; }
+.rk-move { display: inline-flex; gap: 2px; flex: none; }
+.rk-move button { width: 28px; padding: 0; }
+.rk-cut { position: absolute; left: 0; right: 0; height: 0; border-top: 2px dashed var(--s2); pointer-events: none; }
+.rk-cut span { position: absolute; right: 4px; top: -10px; font-size: 11px; background: var(--s2); color: #fff; border-radius: 4px; padding: 0 5px; line-height: 18px; }
+@media (max-width: 420px) {
+  .rk-grade { width: 62px; font-size: 12px; }
+  .rk-move button { width: 26px; }
+}

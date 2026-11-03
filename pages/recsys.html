@@ -1,0 +1,119 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>推荐链路与排序指标 · DS 面试实验室</title>
+<meta name="description" content="召回、粗排、精排、重排的漏斗；拖动列表顺序，实时算 Precision@K、Recall@K、NDCG@K、AUC 和 GAUC。">
+<script>try{var t=localStorage.getItem('dsil.theme');t=t&&JSON.parse(t);if(t==='light'||t==='dark')document.documentElement.setAttribute('data-theme',t)}catch(e){}</script>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.css">
+<link rel="stylesheet" href="../assets/css/site.css">
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.9.0/d3.min.js"></script>
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.js"></script>
+<script defer src="../assets/js/core.js"></script>
+<script defer src="../assets/js/registry.js"></script>
+<script defer src="../assets/js/quiz.js"></script>
+<script defer src="../assets/js/pages/recsys.js"></script>
+</head>
+<body data-page="recsys">
+<main>
+  <h1>推荐链路与排序指标</h1>
+  <p class="subtitle">搜索推荐 · 面试频率中 · 约 30 分钟</p>
+
+  <section class="card intuition">
+    <h2><span class="num">1</span>一句话直觉</h2>
+    <p>推荐是一层层的漏斗：越往前候选越多、模型越简单，越往后候选越少、模型越复杂。评价排序好不好，要看“好内容是不是排在前面”，而不只是“猜得准不准”。</p>
+  </section>
+
+  <section class="card lab">
+    <h2><span class="num">2</span>交互实验</h2>
+
+    <h3>实验 1：推荐漏斗（点一层看详情）</h3>
+    <p class="note">每层的数量是常见量级的示意，不同公司差别很大。</p>
+    <div class="chips" id="chips1"></div>
+    <div class="chart" id="ch1"></div>
+    <div id="d1"></div>
+    <div id="c1"></div>
+    <div class="readout" id="r1"></div>
+    <p class="note small">打分成本按假设计算：粗排每条 1 个单位，精排每条 50 个单位（示意，不是真实数据）。</p>
+    <div class="btnrow"><button class="btn" id="b1-reset" type="button">重置</button></div>
+    <div class="tasks">
+      <details class="try"><summary>默认（召回 5,000、粗排 500），跳过粗排、让精排直接打分召回结果，成本变成几倍？</summary>
+        <div class="ans">约 <strong>8.3 倍</strong>（30,000 → 250,000 个单位）。这就是分层的理由：贵的模型只用在少量候选上，延迟和机器成本才扛得住。</div></details>
+      <details class="try"><summary>点“粗排”，为什么双塔模型适合放在这一层？</summary>
+        <div class="ans">双塔的用户向量和视频向量是分开算的，几百万条视频的向量可以提前算好存起来，线上只需要算一次用户向量、再做内积，成本很低；代价是用户和视频的特征没有充分交叉，所以不如精排准。</div></details>
+    </div>
+
+    <h3>实验 2：排序指标实验室</h3>
+    <p class="note">每个用户看到 8 条推荐。按住 ≡ 拖动（或点 ↑↓）调整顺序；点相关度按钮在 0–3 之间切换（0 无感、1 点击、2 看完、3 收藏追更）；“=上”表示这条和上一条模型分数相同（只影响 AUC）。相关度 ≥1 算“相关”。</p>
+    <div id="c2"></div>
+    <div class="rk-list" id="list2"></div>
+    <div class="readout" id="r2"></div>
+    <h3>多个用户：GAUC 和全局 AUC</h3>
+    <p class="note">模型给活跃用户 A 的整体打分偏高、给不活跃用户 C 的偏低（看每条的“分数”）。</p>
+    <div class="tbl-wrap" id="t2"></div>
+    <div class="readout" id="r2b"></div>
+    <div class="btnrow"><button class="btn" id="b2-reset" type="button">重置</button></div>
+    <div class="tasks">
+      <details class="try"><summary>用户 A、K=3：把第 3 条（不感兴趣）和第 4 条（看完）交换，P@3 和 NDCG@3 怎么变？</summary>
+        <div class="ans">P@3 从 0.667 变成 <strong>1.000</strong>，R@3 从 0.4 变成 0.6，NDCG@3 从 0.812 变成 <strong>0.972</strong>，AUC 从 0.733 变成 0.800。一个“看完”换到前面，NDCG 涨得比 P@K 更明显，因为它还考虑了相关程度和位置。</div></details>
+      <details class="try"><summary>恢复默认，把用户 A 第 3 条设成“=上”（和第 2 条并列），AUC 怎么变？再试着把第 2 条设成“=上”。</summary>
+        <div class="ans">第 3 条（不相关）和第 2 条（相关）并列：这一对正负样本只记 0.5 分，AUC 从 0.733 降到 <strong>0.700</strong>。第 2 条和第 1 条并列：两条都是相关的，正样本之间的并列不影响 AUC，仍是 0.733。</div></details>
+      <details class="try"><summary>默认数据下，GAUC 和全局 AUC 哪个大？为什么？</summary>
+        <div class="ans">全局 AUC 约 <strong>0.793</strong>，GAUC 约 <strong>0.705</strong>。全局 AUC 把不同用户的样本混在一起比，模型只要把“活跃用户”整体排在“不活跃用户”前面就能得分，但这对推荐没有用：每个用户只看到自己的列表。GAUC 只在每个用户内部比，更接近线上效果。</div></details>
+    </div>
+  </section>
+
+  <section class="card formulas">
+    <h2><span class="num">3</span>关键公式</h2>
+    <div class="formula">
+      <div class="texd">P@K=\frac{\text{前 K 条中相关的条数}}{K},\qquad R@K=\frac{\text{前 K 条中相关的条数}}{\text{全部相关条数}}</div>
+      <p class="plain">Precision 是精确率（不是“准确率”，准确率是 Accuracy）。K 越大，R@K 越高，P@K 往往越低。</p>
+    </div>
+    <div class="formula">
+      <div class="texd">\mathrm{DCG}@K=\sum_{i=1}^{K}\frac{2^{rel_i}-1}{\log_2(i+1)},\qquad \mathrm{NDCG}@K=\frac{\mathrm{DCG}@K}{\mathrm{IDCG}@K}</div>
+      <p class="plain">越相关、越靠前，得分越高；除以理想排序的 DCG（IDCG）归一化到 0–1。</p>
+    </div>
+    <div class="formula">
+      <div class="texd">\mathrm{AUC}=\frac{\#\{s_+>s_-\}+0.5\,\#\{s_+=s_-\}}{n_+\,n_-}</div>
+      <p class="plain">随机挑一个正样本和一个负样本，正样本分数更高的概率；分数相同记一半。</p>
+    </div>
+    <div class="formula">
+      <div class="texd">\mathrm{GAUC}=\frac{\sum_u w_u\,\mathrm{AUC}_u}{\sum_u w_u}</div>
+      <p class="plain">GAUC（Group AUC，按用户分组的 AUC）：每个用户算一个 AUC，再按曝光或点击数加权。全是正样本或全是负样本的用户算不出 AUC，要剔除。</p>
+    </div>
+  </section>
+
+  <section class="card pitch">
+    <h2><span class="num">4</span>面试口述版（30 秒）</h2>
+    <blockquote>推荐链路一般分四层。召回从海量内容里用多路策略捞出几千条，比如协同过滤、向量召回、热门和关注，追求不漏；粗排用双塔这类轻量模型砍到几百条；精排用复杂的多目标深度模型把候选排准；重排处理整屏列表的多样性、去重和业务规则。分层是为了在延迟和算力限制下，把贵的模型只用在少量候选上。离线评估上，Top-K 列表看 Precision@K、Recall@K 和 NDCG，NDCG 同时考虑相关程度和位置；精排模型常看 AUC，但推荐场景更看 GAUC，因为全局 AUC 会混入用户之间的比较，活跃用户整体分数高就能“刷”出好看的 AUC。离线指标最终要用线上 AB 实验验证。</blockquote>
+  </section>
+
+  <section class="card myths">
+    <h2><span class="num">5</span>常见误区</h2>
+    <ul>
+      <li><span class="wrong">✗ 把 Precision 叫“准确率”。</span><br><span class="right">✓</span> Precision 是精确率；准确率是 Accuracy（所有样本里判对的比例）。</li>
+      <li><span class="wrong">✗ “重排会枚举所有排列，选最好的那个”。</span><br><span class="right">✓</span> 20 条就有 20! 种排列，不可能枚举。实际是生成少量候选序列（贪心、规则、生成模型），再用评估模型打分选一个。</li>
+      <li><span class="wrong">✗ “物品协同过滤的相似度来自内容标签”。</span><br><span class="right">✓</span> 来自共同行为：喜欢 A 的用户也喜欢 B，A 和 B 就相似。按标签找相似是内容召回。</li>
+      <li><span class="wrong">✗ “新视频冷启动可以靠协同过滤”。</span><br><span class="right">✓</span> 新视频还没有交互数据，协同过滤用不上。要用内容特征（标题、类型、画面）匹配，再分配一部分探索流量积累反馈。</li>
+      <li><span class="wrong">✗ “离线 AUC 高就说明推荐效果好”。</span><br><span class="right">✓</span> 全局 AUC 可能被用户之间的差异抬高；看 GAUC。离线指标和线上效果也不总一致，最终要靠 AB 实验。</li>
+    </ul>
+  </section>
+
+  <section class="card quiz">
+    <h2><span class="num">6</span>自测题</h2>
+    <div id="quiz-list"></div>
+  </section>
+
+  <section class="card project">
+    <h2><span class="num">7</span>和 X5 项目的联系</h2>
+    <p>增益模型本质上也是一个<strong>排序</strong>问题：按“发短信能提高多少购买概率”给客户排序，只发给排在前面的人。项目用 Qini 系数衡量这个排序的好坏（类似 AUC 衡量“正样本是否排在前面”）。</p>
+    <ul>
+      <li>按“购买概率”排序的普通响应模型，测试集 Qini 系数是 <strong>−0.0052</strong>，比随机发送还差：它把“不发也会买”的人排在了前面。</li>
+      <li>最终的 T-learner（逻辑回归）Qini 系数 <strong>0.0129</strong>。同一份数据，排序目标不同，结论完全不同，这和“推荐要按业务目标选排序指标”是一个道理。</li>
+    </ul>
+    <p class="note">数字来自项目的 <code>results/stage3_summary.json</code>。</p>
+  </section>
+</main>
+</body>
+</html>

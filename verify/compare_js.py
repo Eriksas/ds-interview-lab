@@ -270,6 +270,19 @@ for e in (0.05, 0.5):
         a = np.array([r[key] for r in res])
         mc(f"uplift.rmse_e{e}_{key}", a.mean(), a.std(ddof=1) / np.sqrt(a.size))
 
+
+# ---------- 页面 14 ----------
+m14 = importlib.import_module("14_threshold")
+for d, pi, t in [(1.5, 0.1, 1), (1.5, 0.01, 1), (3, 0.01, 2)]:
+    mm = m14.metrics(d, pi, t)
+    det(f"threshold.prec_{d}_{pi}_{t}", mm["precision"], tol=1e-6)
+    det(f"threshold.f1_{d}_{pi}_{t}", mm["f1"], tol=1e-6)
+det("threshold.auc_1.5", m14.auc_theory(1.5), tol=1e-6)
+det("threshold.ap_1.5_0.1", m14.ap_theory(1.5, 0.1), tol=1e-6)
+det("threshold.ap_1.5_0.01", m14.ap_theory(1.5, 0.01), tol=1e-6)
+det("threshold.bestf1_t_0.1", m14.best_f1(1.5, 0.1)[0], tol=2e-3)
+det("threshold.bestf1_t_0.01", m14.best_f1(1.5, 0.01)[0], tol=2e-3)
+
 # ---------- 输出 ----------
 print("浏览器模拟（Node 运行同一份 JS）vs Python（numpy）对照")
 print("公式类：差异 ≤ 容差；模拟类：差异 ≤ 4 × 合并蒙特卡洛标准误（上百项一起检查，用 4 倍避免多重比较误报）\n")

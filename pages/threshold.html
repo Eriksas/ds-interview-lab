@@ -1,0 +1,103 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>分类阈值实验室 · DS 面试实验室</title>
+<meta name="description" content="拖动阈值看混淆矩阵、精确率、召回率、F1、ROC 和 PR 曲线；类别不平衡时为什么 PR 曲线更有用。">
+<script>try{var t=localStorage.getItem('dsil.theme');t=t&&JSON.parse(t);if(t==='light'||t==='dark')document.documentElement.setAttribute('data-theme',t)}catch(e){}</script>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.css">
+<link rel="stylesheet" href="../assets/css/site.css">
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.9.0/d3.min.js"></script>
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.js"></script>
+<script defer src="../assets/js/core.js"></script>
+<script defer src="../assets/js/registry.js"></script>
+<script defer src="../assets/js/quiz.js"></script>
+<script defer src="../assets/js/pages/threshold.js"></script>
+</head>
+<body data-page="threshold">
+<main>
+  <h1>分类阈值实验室</h1>
+  <p class="subtitle">机器学习 · 面试频率中 · 约 20 分钟</p>
+
+  <section class="card intuition">
+    <h2><span class="num">1</span>一句话直觉</h2>
+    <p>模型只给出一个分数，“分数多高才算正”是我们定的。阈值往下调，抓到的正样本更多，误报也更多；正样本越稀少，误报越容易淹没真正的正样本。</p>
+  </section>
+
+  <section class="card lab">
+    <h2><span class="num">2</span>交互实验</h2>
+    <p class="note">负样本的分数 ~ N(0,1)，正样本 ~ N(d,1)。下面的数都按 1 万个样本的期望值计算（verify 里用 100 万个模拟样本核对过）。</p>
+    <div id="c1"></div>
+    <div class="chart" id="ch1"></div>
+    <div id="lg1"></div>
+    <div class="tbl-wrap" id="cm"></div>
+    <div class="readout" id="r1"></div>
+    <div class="grid2"><div class="chart" id="ch2"></div><div class="chart" id="ch3"></div></div>
+    <p class="note small">黑点是当前阈值的位置。ROC 的虚线是随机猜（AUC=0.5）；PR 的虚线是随机猜的精确率，等于正样本占比。</p>
+    <div class="btnrow">
+      <button class="btn" id="b1-reset" type="button">重置</button>
+      <button class="btn" id="b1-f1" type="button">跳到 F1 最大的阈值</button>
+    </div>
+    <div class="tasks">
+      <details class="try"><summary>默认（d=1.5、正样本 10%、阈值 1.0）：精确率和召回率各是多少？</summary>
+        <div class="ans">精确率 <strong>32.6%</strong>，召回率 <strong>69.1%</strong>：每判 3 个正样本，只有 1 个是真的。ROC AUC 0.856 看起来不错，但 PR 曲线下面积只有 0.478。</div></details>
+      <details class="try"><summary>保持阈值不变，把正样本占比拖到 1%。ROC 曲线和 PR 曲线各怎么变？</summary>
+        <div class="ans">ROC 曲线<strong>完全不变</strong>（AUC 仍是 0.856），召回率和误报率也不变；但精确率从 32.6% 掉到 <strong>4.2%</strong>，PR 曲线下面积从 0.478 掉到 0.115。ROC 只看两类各自内部的比例，对不平衡不敏感；PR 曲线直接反映“报出来的有多少是真的”，不平衡时更能说明问题。</div></details>
+      <details class="try"><summary>点“跳到 F1 最大的阈值”，正样本 10% 和 1% 时分别跳到哪里？</summary>
+        <div class="ans">10% 时阈值约 1.44，F1 0.477；1% 时阈值升到约 2.30，F1 只有 0.186。正样本越少，最优阈值越高（要更“挑剔”才能控制误报）。实际选阈值还要看业务：漏掉一个欺诈和误拦一个正常用户的代价不同。</div></details>
+      <details class="try"><summary>正样本 1% 时，把阈值拖到最右（全部判为负），准确率是多少？</summary>
+        <div class="ans"><strong>99%</strong>，但一个正样本都没抓到。这就是“准确率悖论”：类别不平衡时准确率几乎没有意义。</div></details>
+    </div>
+  </section>
+
+  <section class="card formulas">
+    <h2><span class="num">3</span>关键公式</h2>
+    <div class="formula">
+      <div class="texd">\text{Precision}=\frac{TP}{TP+FP},\quad \text{Recall}=\frac{TP}{TP+FN},\quad F_1=\frac{2PR}{P+R}</div>
+      <p class="plain">精确率：报出来的里面有多少是真的；召回率：真的里面抓到多少；F1 是两者的调和平均。</p>
+    </div>
+    <div class="formula">
+      <div class="texd">\text{Precision}=\frac{\pi\cdot TPR}{\pi\cdot TPR+(1-\pi)\cdot FPR}</div>
+      <p class="plain">π 是正样本占比。ROC 曲线的两个坐标 TPR、FPR 与 π 无关，精确率却直接受 π 影响，所以不平衡时要看 PR。</p>
+    </div>
+    <div class="formula">
+      <div class="texd">\mathrm{AUC}=P(s_+>s_-)=\Phi\!\left(\frac{d}{\sqrt2}\right)</div>
+      <p class="plain">AUC 是“随机挑一正一负，正的分数更高”的概率；两类分数都是正态、方差相同时有这个简单公式。</p>
+    </div>
+    <div class="formula">
+      <div class="texd">\hat p\ \ge\ \frac{C_{FP}}{C_{FP}+C_{FN}}\ \Rightarrow\ \text{判为正}</div>
+      <p class="plain">如果模型输出的是校准过的概率，按业务成本定阈值：误报成本 C_FP、漏报成本 C_FN。漏报代价越大，阈值越低。</p>
+    </div>
+  </section>
+
+  <section class="card pitch">
+    <h2><span class="num">4</span>面试口述版（30 秒）</h2>
+    <blockquote>分类模型输出的是分数，阈值决定精确率和召回率的取舍：阈值降低，召回率上升、精确率下降。ROC 曲线画的是召回率和误报率，两者都不受正负样本比例影响，所以 AUC 衡量的是排序能力；但类别极不平衡时，误报率的分母是海量负样本，一点点误报率就意味着大量误报，ROC 会显得很乐观，这时更应该看 PR 曲线和平均精确率。阈值不该默认取 0.5，要根据业务目标和成本来定，比如漏报和误报的代价比；准确率在不平衡时没有意义，全部判负也能 99%。</blockquote>
+  </section>
+
+  <section class="card myths">
+    <h2><span class="num">5</span>常见误区</h2>
+    <ul>
+      <li><span class="wrong">✗ “样本极不平衡时，只看 ROC AUC 就够了”。</span><br><span class="right">✓</span> ROC 不受比例影响，会显得乐观；要同时看 PR 曲线、平均精确率，以及业务关心的阈值下的精确率和召回率。</li>
+      <li><span class="wrong">✗ “阈值默认取 0.5”。</span><br><span class="right">✓</span> 0.5 只在概率校准、两类错误代价相同时才合理。按业务成本或目标（比如召回率至少 80%）来选。</li>
+      <li><span class="wrong">✗ “准确率 99%，模型很好”。</span><br><span class="right">✓</span> 正样本只占 1% 时，全部判负就是 99%。</li>
+      <li><span class="wrong">✗ “AUC 一般不会超过 0.9”。</span><br><span class="right">✓</span> 没有这种规律，取决于任务难度和特征。AUC 异常高时反而要先检查有没有数据泄露。</li>
+      <li><span class="wrong">✗ 不平衡时先对全部数据过采样，再划分训练集和测试集。</span><br><span class="right">✓</span> 只能在训练集上过采样，否则复制出来的样本会同时出现在训练和测试里；重采样后模型输出的概率会偏，要重新校准。</li>
+      <li><span class="wrong">✗ 把宏平均和微平均说反。</span><br><span class="right">✓</span> 宏平均：每个类别算一个指标再简单平均，小类别和大类别一样重要；微平均：把所有类别的 TP、FP、FN 加总再算，结果被大类别主导。关心小类别时看宏平均。</li>
+    </ul>
+  </section>
+
+  <section class="card quiz">
+    <h2><span class="num">6</span>自测题</h2>
+    <div id="quiz-list"></div>
+  </section>
+
+  <section class="card project">
+    <h2><span class="num">7</span>和 X5 项目的联系</h2>
+    <p>X5 项目里的“普通响应模型”就是一个预测“会不会买”的分类器。它预测购买再准（AUC 再高），也不说明发短信能带来增量：按它的分数选人，测试集 Qini 系数是 −0.0052，比随机还差。分类指标衡量的是“猜得准不准”，营销决策需要的是“改变了多少”，这两件事要分开（详见“增益模型”页）。</p>
+    <p class="note">数字来自项目的 <code>results/stage3_summary.json</code>。</p>
+  </section>
+</main>
+</body>
+</html>

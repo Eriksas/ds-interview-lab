@@ -35,7 +35,7 @@
       desc: '把总指标变化拆成“结构变化”和“各自比率变化”；视频平台指标树。' },
     { id: 'recsys', title: '推荐链路与排序指标', group: 'rec', freq: 2, minutes: 30, ready: true, verify: '07_recsys',
       desc: '召回 → 粗排 → 精排 → 重排；拖动列表算 P@K、R@K、NDCG、AUC 和 GAUC。' },
-    { id: 'threshold', title: '分类阈值实验室', group: 'ml', freq: 2, minutes: 20, ready: false, verify: '14_threshold',
+    { id: 'threshold', title: '分类阈值实验室', group: 'ml', freq: 2, minutes: 20, ready: true, verify: '14_threshold',
       desc: '拖动阈值看混淆矩阵、精确率、召回率、ROC 和 PR 曲线；类别不平衡时看 PR。' },
     { id: 'bias-variance', title: '偏差-方差与正则化', group: 'ml', freq: 2, minutes: 20, ready: false, verify: '15_bias_variance',
       desc: '多项式拟合的欠拟合 / 过拟合；L1 把系数压到 0，L2 只缩小。' },

@@ -417,3 +417,11 @@ table.tbl { border-collapse: collapse; width: 100%; font-size: 14px; }
 .ug-cell.sure { background: var(--s1-a); }
 .ug-cell.dog { background: color-mix(in srgb, var(--bad) 18%, transparent); }
 .ug-cell.lost { background: var(--surface-2); }
+
+/* ---------- 混淆矩阵 ---------- */
+.tbl.cm td { width: 40%; }
+.tbl.cm td b { display: block; font-size: 18px; font-family: var(--mono); }
+.tbl.cm td small { display: block; color: var(--text-2); font-size: 12px; font-family: var(--font); }
+.tbl.cm td.tp { background: var(--s2-a); }
+.tbl.cm td.fp { background: var(--s1-a); }
+.tbl.cm td.fn, .tbl.cm td.tn { background: var(--surface-2); }

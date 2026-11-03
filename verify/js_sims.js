@@ -246,4 +246,20 @@ if (Lab.sim.uplift) {
   }
 }
 
+
+/* ---------- 页面 14：分类阈值 ---------- */
+if (Lab.sim.threshold) {
+  const T = Lab.sim.threshold;
+  for (const [d, pi, t] of [[1.5, 0.1, 1], [1.5, 0.01, 1], [3, 0.01, 2]]) {
+    const m = T.metrics(d, pi, t);
+    out[`threshold.prec_${d}_${pi}_${t}`] = { value: m.precision };
+    out[`threshold.f1_${d}_${pi}_${t}`] = { value: m.f1 };
+  }
+  out['threshold.auc_1.5'] = { value: T.auc(1.5) };
+  out['threshold.ap_1.5_0.1'] = { value: T.ap(1.5, 0.1) };
+  out['threshold.ap_1.5_0.01'] = { value: T.ap(1.5, 0.01) };
+  out['threshold.bestf1_t_0.1'] = { value: T.bestF1(1.5, 0.1).t };
+  out['threshold.bestf1_t_0.01'] = { value: T.bestF1(1.5, 0.01).t };
+}
+
 console.log(JSON.stringify(out, null, 1));

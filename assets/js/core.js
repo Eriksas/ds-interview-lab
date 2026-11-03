@@ -650,12 +650,13 @@
     });
     paint();
     const foot = el('section', { class: 'card' });
-    foot.append(
-      el('div', { class: 'learned-row' },
-        el('span', { class: 'note' }, '学完了？'),
-        learnedBtn
-      )
-    );
+    if (me.group !== 'review')
+      foot.append(
+        el('div', { class: 'learned-row' },
+          el('span', { class: 'note' }, '学完了？'),
+          learnedBtn
+        )
+      );
     if (me.verify) {
       foot.append(
         el('p', { class: 'note small', html: `本页写死的结论性数字来自 <a href="${REPO}/blob/main/verify/${me.verify}_output.txt" target="_blank" rel="noopener">verify/${me.verify}_output.txt</a>（Python，seed 42）。标“模拟”的都是随机生成的演示数据，不是真实业务数据。` })

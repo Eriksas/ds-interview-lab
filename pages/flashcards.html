@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>闪卡总复习 · DS 面试实验室</title>
+<meta name="description" content="汇总所有页面的自测题，随机抽题复习。">
+<script>try{var t=localStorage.getItem('dsil.theme');t=t&&JSON.parse(t);if(t==='light'||t==='dark')document.documentElement.setAttribute('data-theme',t)}catch(e){}</script>
+<link rel="stylesheet" href="../assets/css/site.css">
+<script defer src="../assets/js/core.js"></script>
+<script defer src="../assets/js/registry.js"></script>
+<script defer src="../assets/js/quiz.js"></script>
+<script defer src="../assets/js/pages/flashcards.js"></script>
+</head>
+<body data-page="flashcards">
+<main>
+  <h1>闪卡总复习</h1>
+  <p class="subtitle">所有页面的自测题，随机抽。先自己在心里答一遍，再看答案。</p>
+
+  <section class="card">
+    <div class="chips" id="fc-groups"></div>
+    <label class="chk" style="margin-left:0"><input type="checkbox" id="fc-only"> 只看还不会的</label>
+    <p class="note small" id="fc-stat"></p>
+  </section>
+
+  <section class="card" id="fc-card"></section>
+
+  <div id="fc-ctl">
+    <div class="btnrow">
+      <button class="btn primary" id="fc-show" type="button">看答案</button>
+      <button class="btn primary hide" id="fc-yes" type="button">✓ 会了</button>
+      <button class="btn hide" id="fc-no" type="button">✗ 还不会</button>
+    </div>
+    <div class="btnrow">
+      <button class="btn small" id="fc-prev" type="button">← 上一张</button>
+      <button class="btn small" id="fc-next" type="button">跳过 →</button>
+      <button class="btn small" id="fc-shuffle" type="button">重新洗牌</button>
+      <button class="btn small" id="fc-clear" type="button">清空“会了 / 不会”记录</button>
+    </div>
+  </div>
+  <p class="note small">“会了 / 还不会”只记在这台设备的浏览器里。</p>
+</main>
+</body>
+</html>

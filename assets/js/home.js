@@ -53,6 +53,13 @@
       review.forEach((p) => grid.append(card(p)));
       map.append(h, grid);
     }
+    // 建议学习顺序
+    const ord = Lab.$('#order');
+    if (ord && Lab.STAGES) {
+      let k = 0;
+      ord.innerHTML = Lab.STAGES.map((s) => `<li><strong>${s.title}</strong>：` +
+        s.ids.map((id) => { const p = pages.find((q) => q.id === id); k++; return p ? `<a href="pages/${id}.html">${p.title}</a>` : id; }).join(' → ') + '</li>').join('');
+    }
     progress();
   });
 })();

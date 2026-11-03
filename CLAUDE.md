@@ -9,7 +9,7 @@
 - 主要在手机上看。
 
 ## 最重要的限制：仓库和网站公开，内容必须原创
-- 素材库 `E:\da-ds-library`（第三方笔记，只读）只用来确定"讲哪些知识点、哪里容易错"。只看 `*_修订版.md`，`【修订】` 是纠正过的错误，`【补充】` 是补写内容。
+- 本地参考资料 `E:\da-ds-library`（不在本仓库，只读）只用来确定"讲哪些知识点、哪里容易错"。只看 `*_修订版.md`，`【修订】` 是纠正过的错误，`【补充】` 是补写内容。
 - 网站上的文字、例子、图、题目都重新写；不复制原文段落、图片、表格和面经原题原文；不提原作者和来源笔记。
 - **不要把素材库的任何文件拷进本仓库。**
 - 网站上不放用户个人信息（姓名、学校、电话、邮箱）。git 提交身份用 GitHub 的 noreply 邮箱（已在本仓库 git config 里设好）。
@@ -46,3 +46,16 @@
 ## 工作流程
 - 每做完一页：跑 verify → 提交并推送（中文提交信息）→ 在线上链接自测（桌面宽度和 375px 各看一遍、控制台无报错、交互都能用）。
 - 开发时可以起本地服务器调试，但交付的是线上链接。
+- 新增页面的步骤：写 `verify/NN_xxx.py` → 写 `assets/js/pages/<id>.js` 和 `pages/<id>.html` → 在 `registry.js` 里把 ready 改成 true → 在 `quiz.js` 加 3 道题 → 在 `js_sims.js` / `compare_js.py` 加对照项 → `python verify/run_all.py NN compare` → `python verify/lint_site.py`。
+
+## 当前状态（2026-11-04）
+- 16 个页面全部上线（P0、P1、P2 都完成），README 已写。翻页顺序 = `registry.js` 里 PAGES 的顺序 = 建议学习顺序。
+- `verify/compare_js_output.txt` 里 220 项对照全部通过。
+
+## 踩过的坑
+- defer 脚本执行时 `document.readyState` 已经是 interactive，但后面的脚本还没加载；`Lab.ready` 必须等 DOMContentLoaded。
+- 通过 Bash heredoc 写含反斜杠的内容会被吞掉（`\t`、`\b` 变成控制字符）。要改含 LaTeX 的文件，用 Edit / Write 工具或写成 .py 脚本再运行；`lint_site.py` 会查出控制字符。
+- 页面里引用的“单次模拟”数字来自 Python，浏览器随机数不同，所以写成“verify 里的一次模拟”；能用多次平均或理论值时优先用。
+- 正态右尾概率用 `0.5 * erfc(x/√2)`，不要用 `1 − Φ(x)`（尾部会变成 0/0）。
+- 浏览器面板隐藏时计时器会被限流，线上自测用逐页 navigate + 同步检查，不要在页面里跑长时间的 setTimeout 循环。
+- GitHub Pages 偶尔部署失败（OIDC 超时），用 `gh run rerun <id> --failed` 或再推一次。

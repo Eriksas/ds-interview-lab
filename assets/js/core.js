@@ -438,7 +438,7 @@
     if (typeof container === 'string') container = Lab.$(container);
     opt = opt || {};
     const m = Object.assign({ t: 26, r: 14, b: 44, l: 50 }, opt.margin || {});
-    const W = Math.max(260, container.clientWidth || 340);
+    const W = Math.max(opt.minWidth || 140, container.clientWidth || 340);
     const H = typeof opt.height === 'function' ? opt.height(W) : opt.height || 240;
     d3.select(container).selectAll('svg').remove();
     const svg = d3

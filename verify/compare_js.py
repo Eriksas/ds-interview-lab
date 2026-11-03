@@ -117,6 +117,31 @@ mc("cuped.aa_fpr_cv", *prop(r["rej_cv"].sum(), 20000))
 det("cuped.n_needed_raw", float(np.ceil(m4.n_needed(20, 2.0))), tol=0)
 det("cuped.n_needed_cv", float(np.ceil(m4.n_needed(20, 2.0, 0.51))), tol=0)
 
+
+# ---------- 页面 5 ----------
+m5 = importlib.import_module("05_pitfalls")
+ac, at, pc, pt = m5.pay_expected(0.03, 1.0)
+det("pitfalls.arpu_rel_expected", at / ac - 1)
+det("pitfalls.arppu_rel_expected", (at / pt) / (ac / pc) - 1)
+c, t = m5.pay_sim(0.03, 1.0, 200_000, np.random.default_rng(SEED))
+mc("pitfalls.arpu_diff_sim", t.mean() - c.mean(), np.sqrt(c.var(ddof=1) / c.size + t.var(ddof=1) / t.size))
+cp, tp = c[c > 0], t[t > 0]
+mc("pitfalls.arppu_diff_sim", tp.mean() - cp.mean(), np.sqrt(cp.var(ddof=1) / cp.size + tp.var(ddof=1) / tp.size))
+mc("pitfalls.payrate_t_sim", *prop((t > 0).sum(), t.size))
+_, ptt, pcc, wgt = m5.ramp(0.5)
+det("pitfalls.ramp_pooled", ptt - pcc)
+det("pitfalls.ramp_weighted", wgt)
+wr = m5.winners(20000)
+det("pitfalls.winner_ratio_theory", wr["ratio"], tol=1e-5)
+det("pitfalls.winner_power", wr["power"], tol=1e-5)
+# 大样本模拟的“显著实验平均估计 / 真实值”：用 Python 同样模拟 20 万次，标准误用 delta 近似
+wb = m5.winners(20000, sims=200_000, rng=np.random.default_rng(SEED))
+est = 0.005 + wb["se"] * np.random.default_rng(SEED + 1).normal(size=200_000)
+sig = est / wb["se"] > 1.959964
+js["pitfalls.winner_ratio_sim_big"]["se"] = float(est[sig].std(ddof=1) / np.sqrt(sig.sum()) / 0.005)
+mc("pitfalls.winner_ratio_sim_big", wb["sim_ratio"], float(est[sig].std(ddof=1) / np.sqrt(sig.sum()) / 0.005))
+det("pitfalls.novelty_7d_avg", m5.novelty_curve(7, long=0.002, nov=0.01).mean())
+
 # ---------- 输出 ----------
 print("浏览器模拟（Node 运行同一份 JS）vs Python（numpy）对照")
 print("公式类：差异 ≤ 容差；模拟类：差异 ≤ 3 × 合并蒙特卡洛标准误\n")

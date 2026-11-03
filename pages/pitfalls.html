@@ -1,0 +1,154 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>实验结果的陷阱 · DS 面试实验室</title>
+<meta name="description" content="只看付费用户的选择偏差、放量时的辛普森悖论、赢家诅咒、新奇效应，每个一个小模拟。">
+<script>try{var t=localStorage.getItem('dsil.theme');t=t&&JSON.parse(t);if(t==='light'||t==='dark')document.documentElement.setAttribute('data-theme',t)}catch(e){}</script>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.css">
+<link rel="stylesheet" href="../assets/css/site.css">
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.9.0/d3.min.js"></script>
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.js"></script>
+<script defer src="../assets/js/core.js"></script>
+<script defer src="../assets/js/registry.js"></script>
+<script defer src="../assets/js/quiz.js"></script>
+<script defer src="../assets/js/pages/pitfalls.js"></script>
+</head>
+<body data-page="pitfalls">
+<main>
+  <h1>实验结果的陷阱</h1>
+  <p class="subtitle">AB 实验 · 面试频率高 · 约 30 分钟</p>
+
+  <section class="card intuition">
+    <h2><span class="num">1</span>一句话直觉</h2>
+    <p>随机分组只保证“分组那一刻”两组可比。之后只挑一部分人比、把比例不同的几天混在一起、只相信显著的结果、只看头几天，都会让结论偏掉，甚至反过来。</p>
+  </section>
+
+  <section class="card lab">
+    <h2><span class="num">2</span>交互实验</h2>
+
+    <h3>陷阱 1：只比较付费用户 <span class="tag-sim">模拟</span></h3>
+    <p class="note">场景：策略降低了首次付费的门槛。用户里 10% 是重度用户（付费率 30%，平均约 104 元），90% 是轻度用户（付费率 3%，平均约 14 元）。策略让一部分轻度用户开始小额付费（平均约 8 元）。</p>
+    <div id="ca"></div>
+    <div class="grid2"><div class="chart" id="cha1"></div><div class="chart" id="cha2"></div></div>
+    <div id="lga"></div>
+    <div class="readout" id="ra"></div>
+    <p class="note small" id="capa"></p>
+    <div class="btnrow">
+      <button class="btn primary" id="ba-again" type="button">再模拟一次</button>
+      <button class="btn" id="ba-reset" type="button">重置</button>
+    </div>
+    <div class="tasks">
+      <details class="try"><summary>默认参数下，两个指标的结论一样吗？</summary>
+        <div class="ans">相反。全体人均上升约 <strong>6.5%</strong>（期望值），付费用户人均却下降约 <strong>28%</strong>。原因不是谁少付了钱，而是付费用户里多了一批小额的新付费者，“付费用户”这个群体的构成变了。</div></details>
+      <details class="try"><summary>把“新增付费”拖到 0、重度用户金额拖到 ×1.10，两个指标还矛盾吗？</summary>
+        <div class="ans">不矛盾了，两者都上升约 <strong>8.9%</strong>。策略没有改变“谁付费”时，只看付费用户不会有选择偏差；问题出在策略改变了付费人群的构成。</div></details>
+      <details class="try"><summary>只让 1% 的轻度用户新增付费（重度用户不变），会怎样？</summary>
+        <div class="ans">全体人均 +2.2%，付费用户人均 −11.8%。哪怕只多出一小撮新付费者，付费用户的平均值也会被拉下来。</div></details>
+    </div>
+
+    <h3>陷阱 2：放量过程中的辛普森悖论</h3>
+    <p class="note">场景：第 1 天实验组只放 10% 流量，第 2 天放到更多。两天的基线转化率不同（比如工作日和周末），策略每天都真实提升了同样多。每天 10 万人，表格是按期望值算的模拟数据。</p>
+    <div id="cb"></div>
+    <div class="tbl-wrap" id="tb"></div>
+    <div class="chart" id="chb"></div>
+    <div id="lgb"></div>
+    <div class="readout" id="rb"></div>
+    <div class="btnrow"><button class="btn" id="bb-reset" type="button">重置</button></div>
+    <div class="tasks">
+      <details class="try"><summary>默认参数：每天都是 +0.5 个百分点，合并后是多少？</summary>
+        <div class="ans">合并后是 <strong>−1.41</strong> 个百分点，方向反了。实验组的人大多来自转化率低的第 2 天，对照组的人大多来自转化率高的第 1 天，比的其实是“哪天来的人”。</div></details>
+      <details class="try"><summary>把第 2 天的流量占比拖回 10%（两天一样），或者把基线差拖到 0，会怎样？</summary>
+        <div class="ans">两种情况合并后都是 <strong>+0.50</strong>，悖论消失。辛普森悖论要同时满足两个条件：分组比例随天变化，而且天和结果有关。日期在这里是混杂因素（confounder，同时影响分组比例和结果的变量）。</div></details>
+      <details class="try"><summary>正确的做法是什么？</summary>
+        <div class="ans">按天分别算差值，再按人数加权（这里一直是 +0.50）；或者只用流量稳定后的数据；或者用带日期固定效应的回归，Stata 里就是 <code>reg y treat i.day</code>。这里该信“分组”的结论，因为日期在因果链上是混杂因素，而不是策略的结果。</div></details>
+    </div>
+
+    <h3>陷阱 3：赢家诅咒 <span class="tag-sim">模拟</span></h3>
+    <p class="note">场景：同一个策略（基线 10%，真实提升 0.5 个百分点）被重复测 2,000 次。只有“显著为正”的结果会被推全。</p>
+    <div id="cc"></div>
+    <div class="chart" id="chc"></div>
+    <div id="lgc"></div>
+    <div class="readout" id="rc"></div>
+    <div class="btnrow">
+      <button class="btn primary" id="bc-again" type="button">再模拟一次</button>
+      <button class="btn" id="bc-reset" type="button">重置</button>
+    </div>
+    <div class="tasks">
+      <details class="try"><summary>默认每组 2 万人：功效多少？显著实验的平均估计是真实值的几倍？</summary>
+        <div class="ans">功效约 <strong>38%</strong>，显著且为正的实验平均估计约为真实值的 <strong>1.6 倍</strong>（理论 1.61）。只有碰巧测高了的实验才能越过门槛，所以“显著的那些”系统性偏大。</div></details>
+      <details class="try"><summary>把样本拖到每组 5,000 和 6 万，分别是几倍？</summary>
+        <div class="ans">每组 5,000：功效约 13%，约 <strong>3.0 倍</strong>；每组 6 万：功效约 81.5%，只有约 <strong>1.1 倍</strong>。功效越低，赢家诅咒越严重。这也是“小流量显著、推全后效果变小”的原因之一。</div></details>
+    </div>
+
+    <h3>陷阱 4：新奇效应 <span class="tag-sim">模拟</span></h3>
+    <p class="note">场景：改版后用户出于好奇多点几下，新鲜感按半衰期衰减，长期效应只有 +0.2 个百分点。每天的估计带有噪声。</p>
+    <div id="cd"></div>
+    <div class="chart" id="chd"></div>
+    <div id="lgd"></div>
+    <div class="readout" id="rd"></div>
+    <div class="btnrow">
+      <button class="btn primary" id="bd-again" type="button">再模拟一次</button>
+      <button class="btn" id="bd-reset" type="button">重置</button>
+    </div>
+    <div class="tasks">
+      <details class="try"><summary>默认跑 7 天：实验期的平均效应是长期效应的几倍？跑满 28 天呢？</summary>
+        <div class="ans">不含噪声时，7 天平均 +0.76 个百分点，是长期效应的 <strong>3.8 倍</strong>；28 天平均 +0.37，仍是 <strong>1.9 倍</strong>。只看平均值会高估；要看每日效应的<strong>趋势</strong>是否已经走平。</div></details>
+      <details class="try"><summary>把“额外效应”拖到 −0.6（用户一开始不习惯新版本），跑 7 天的结论是什么？</summary>
+        <div class="ans">7 天平均约 <strong>−0.13</strong> 个百分点，看起来是负的，但长期是 +0.2。这叫学习效应或首因效应（primacy effect）：老用户需要时间适应。只跑一周可能错杀好策略。</div></details>
+    </div>
+  </section>
+
+  <section class="card formulas">
+    <h2><span class="num">3</span>关键公式</h2>
+    <div class="formula">
+      <div class="texd">\text{全体人均（ARPU）}=\text{付费率}\times\text{付费用户人均（ARPPU）}</div>
+      <p class="plain">“是否付费”本身受策略影响。只看付费用户等于按一个实验后的结果筛样本，破坏了随机化；应该看全体人均，再拆成付费率和付费用户人均来解释。</p>
+    </div>
+    <div class="formula">
+      <div class="texd">\hat p_T=\sum_d \frac{n_{T,d}}{n_T}\,p_{T,d},\qquad \hat p_C=\sum_d \frac{n_{C,d}}{n_C}\,p_{C,d}</div>
+      <p class="plain">合并后的转化率是各天的加权平均。两组的权重不同（放量导致），比较的就不只是策略，还有“哪天的人”。</p>
+    </div>
+    <div class="formula">
+      <div class="texd">E\big[\hat\tau\mid \text{显著为正}\big]=\tau+\mathrm{SE}\cdot\frac{\varphi(z_{1-\alpha/2}-\lambda)}{1-\Phi(z_{1-\alpha/2}-\lambda)}\;>\;\tau</div>
+      <p class="plain">截断正态的均值：只保留越过门槛的结果，平均值一定偏大；λ=τ/SE 越小（功效越低），偏得越多。</p>
+    </div>
+    <div class="formula">
+      <div class="texd">\tau_t=\tau_\infty+\tau_0\cdot 2^{-(t-1)/h}</div>
+      <p class="plain">第 t 天的效应 = 长期效应 + 衰减的新鲜感（h 是半衰期）。实验期平均值会把 τ₀ 的一部分算进去。</p>
+    </div>
+  </section>
+
+  <section class="card pitch">
+    <h2><span class="num">4</span>面试口述版（30 秒）</h2>
+    <blockquote>实验结果有几个常见陷阱。第一，只比较付费或打赏用户：策略会改变谁付费，按实验后的结果筛样本就破坏了随机化，结论可能反向，应该看全体人均，再拆成付费率和付费用户人均。第二，放量期间流量比例变化时直接合并数据，会出现辛普森悖论，应该按天算再加权，或用带日期固定效应的回归。第三，赢家诅咒：只有测高了的实验才显著，所以显著结果的效应被高估，功效越低越严重，推全后常常缩水，可以保留 holdout 组复核。第四，新奇效应或学习效应：看每日效应的趋势和新老用户的差异，必要时延长实验或做长期观察。</blockquote>
+  </section>
+
+  <section class="card myths">
+    <h2><span class="num">5</span>常见误区</h2>
+    <ul>
+      <li><span class="wrong">✗ “打赏用户的人均打赏下降了，说明策略降低了收入”。</span><br><span class="right">✓</span> 策略可能只是让更多人开始小额打赏。“打赏用户”这个群体被策略改变了，两组的打赏用户不可比，结论甚至会反向。</li>
+      <li><span class="wrong">✗ “两组的付费率差异不显著，所以付费人群没变，只看付费用户没问题”。</span><br><span class="right">✓</span> 不显著不等于没变，只是这次没检测出来；只要策略可能改变谁付费，只看付费用户就有选择偏差风险。</li>
+      <li><span class="wrong">✗ “放量后把几天的数据合起来算，样本更多更准”。</span><br><span class="right">✓</span> 流量比例变化时直接合并会产生辛普森悖论，要按天（按分流比例相同的时段）算再加权。</li>
+      <li><span class="wrong">✗ “小流量显著、推全后不显著，说明推全时出了问题”。</span><br><span class="right">✓</span> 常见原因有：赢家诅咒（显著的那次本来就测高了）、推全后没有对照组只能看前后对比、规模效应（小流量时实验组“占便宜”，人人都有后效果被摊薄）、新奇效应消退。</li>
+      <li><span class="wrong">✗ “跑满一周、显著了就可以推全”。</span><br><span class="right">✓</span> 先看每日效应是在下降还是走平；对比新用户（没见过旧版本，没有新鲜感）和老用户的效应；重要策略保留长期 holdout。</li>
+    </ul>
+  </section>
+
+  <section class="card quiz">
+    <h2><span class="num">6</span>自测题</h2>
+    <div id="quiz-list"></div>
+  </section>
+
+  <section class="card project">
+    <h2><span class="num">7</span>和 X5 项目的联系</h2>
+    <ul>
+      <li>项目的主指标是<strong>全体客户的购买率</strong>（没买记 0），而不是“购买客户的客单价”。如果以后要评估金额，也应该看全体人均消费（没买记 0），再拆成购买率 × 客单价，避免只看购买者带来的选择偏差。</li>
+      <li>增益模型按预测增益分组后，每组的实际增益噪声很大（最终模型和第二名的 Qini 差异不显著）。从很多模型里挑出“最好”的那个，测试集上的成绩也可能偏乐观，这和赢家诅咒是同一个道理，所以项目只在测试集上评估一次。</li>
+    </ul>
+    <p class="note">依据项目 README 和 <code>results/stage4_summary.json</code>。</p>
+  </section>
+</main>
+</body>
+</html>

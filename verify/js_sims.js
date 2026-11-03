@@ -83,4 +83,29 @@ if (Lab.sim.cuped) {
   out['cuped.n_needed_cv'] = { value: C.nNeeded(2, 0.51) };
 }
 
+
+/* ---------- 页面 5：实验结果的陷阱 ---------- */
+if (Lab.sim.pitfalls) {
+  const P = Lab.sim.pitfalls;
+  const e = P.payExpected(0.03, 1);
+  out['pitfalls.arpu_rel_expected'] = { value: e.arpuT / e.arpuC - 1 };
+  out['pitfalls.arppu_rel_expected'] = { value: (e.arpuT / e.prT) / (e.arpuC / e.prC) - 1 };
+  const s = P.paySim(0.03, 1, 200000, 42);
+  const all = [P.meanSe(s.c), P.meanSe(s.t)];
+  const pay = [P.meanSe(s.c.filter((x) => x > 0)), P.meanSe(s.t.filter((x) => x > 0))];
+  out['pitfalls.arpu_diff_sim'] = { value: all[1].m - all[0].m, se: Math.hypot(all[0].se, all[1].se) };
+  out['pitfalls.arppu_diff_sim'] = { value: pay[1].m - pay[0].m, se: Math.hypot(pay[0].se, pay[1].se) };
+  out['pitfalls.payrate_t_sim'] = prop(pay[1].n, 200000);
+  const r = P.ramp(0.5, 0.04, 0.005);
+  out['pitfalls.ramp_pooled'] = { value: r.pooled };
+  out['pitfalls.ramp_weighted'] = { value: r.weighted };
+  const w = P.winners(20000, 2000, 42);
+  out['pitfalls.winner_ratio_theory'] = { value: w.ratio };
+  out['pitfalls.winner_power'] = { value: w.power };
+  const wb = P.winners(20000, 200000, 42);
+  out['pitfalls.winner_ratio_sim_big'] = { value: wb.simRatio, n: wb.nSig };
+  const nv = P.novelty(7, 0.002, 0.01, 3);
+  out['pitfalls.novelty_7d_avg'] = { value: Lab.stats.mean(nv) };
+}
+
 console.log(JSON.stringify(out, null, 1));

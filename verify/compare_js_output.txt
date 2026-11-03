@@ -50,5 +50,16 @@ cuped.mean_cv_big                       模拟       1.99847     1.99278    0.00
 cuped.aa_fpr_cv                         模拟       0.04935     0.05025    0.00090    0.00653  通过
 cuped.n_needed_raw                      公式    1570.00000  1570.00000    0.00000    0.00000  通过
 cuped.n_needed_cv                       公式     801.00000   801.00000    0.00000    0.00000  通过
+pitfalls.arpu_rel_expected              公式       0.06455     0.06455    0.00000    0.00000  通过
+pitfalls.arppu_rel_expected             公式      -0.27763    -0.27763    0.00000    0.00000  通过
+pitfalls.arpu_diff_sim                  模拟       0.25922     0.24756    0.01166    0.31188  通过
+pitfalls.arppu_diff_sim                 模拟     -16.80115   -17.58210    0.78095    3.73767  通过
+pitfalls.payrate_t_sim                  模拟       0.08404     0.08448    0.00044    0.00264  通过
+pitfalls.ramp_pooled                    公式      -0.01405    -0.01405    0.00000    0.00000  通过
+pitfalls.ramp_weighted                  公式       0.00500     0.00500    0.00000    0.00000  通过
+pitfalls.winner_ratio_theory            公式       1.61030     1.61030    0.00000    0.00001  通过
+pitfalls.winner_power                   公式       0.37790     0.37790    0.00000    0.00001  通过
+pitfalls.winner_ratio_sim_big           模拟       1.60894     1.61235    0.00341    0.00513  通过
+pitfalls.novelty_7d_avg                 公式       0.00755     0.00755    0.00000    0.00000  通过
 
-共 48 项，通过 48 项
+共 59 项，通过 59 项

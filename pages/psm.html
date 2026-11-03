@@ -46,7 +46,7 @@
     <div class="tbl-wrap" id="t2"></div>
     <div class="tasks">
       <details class="try"><summary>默认参数：直接比较参加和没参加的人，差多少？匹配后呢？</summary>
-        <div class="ans">直接比约 <strong>3.3</strong>（seed 42 为 3.35；重复 1,000 次平均偏差 +2.4），把“本来就活跃”算进了效果。匹配后接近真实的 1（seed 42 无放回 1.07），三个变量的 |SMD| 都降到 0.1 以下。</div></details>
+        <div class="ans">直接比约 <strong>3.3</strong>（verify 里的一次模拟为 3.35；重复 1,000 次平均偏差 +2.4），把“本来就活跃”算进了效果。匹配后接近真实的 1（那次模拟无放回为 1.07），三个变量的 |SMD| 都降到 0.1 以下。</div></details>
       <details class="try"><summary>把卡钳拖到“不设卡钳”，点“重复 200 次”。无放回的偏差是多少？</summary>
         <div class="ans">无放回偏差约 <strong>+1.2</strong>，有放回只有约 +0.08（verify 重复 1,000 次）。倾向得分高的地方对照组很少，无放回时先到的处理组把好对照用完了，后面的只能配到很远的人。<strong>有放回偏差更小</strong>。</div></details>
       <details class="try"><summary>恢复卡钳 0.2，再点“重复 200 次”。现在两种方法的标准差谁大？</summary>

@@ -1,0 +1,120 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>断点回归与工具变量 · DS 面试实验室</title>
+<meta name="description" content="RDD 的带宽选择、满减凑单为什么让 RDD 失效；鼓励设计里的依从者和 Wald 估计（LATE）。">
+<script>try{var t=localStorage.getItem('dsil.theme');t=t&&JSON.parse(t);if(t==='light'||t==='dark')document.documentElement.setAttribute('data-theme',t)}catch(e){}</script>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.css">
+<link rel="stylesheet" href="../assets/css/site.css">
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.9.0/d3.min.js"></script>
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.js"></script>
+<script defer src="../assets/js/core.js"></script>
+<script defer src="../assets/js/registry.js"></script>
+<script defer src="../assets/js/quiz.js"></script>
+<script defer src="../assets/js/pages/rdd-iv.js"></script>
+</head>
+<body data-page="rdd-iv">
+<main>
+  <h1>断点回归与工具变量</h1>
+  <p class="subtitle">因果推断 · 面试频率低 · 约 30 分钟</p>
+
+  <section class="card intuition">
+    <h2><span class="num">1</span>一句话直觉</h2>
+    <p>断点回归（RDD，regression discontinuity）：门槛两侧紧挨着的人几乎一样，只是一边刚好够上门槛，比较他们就像一次局部的随机实验；前提是人不能自己挪到门槛另一边。</p>
+    <p>工具变量（IV，instrumental variable）：找一个随机的“推力”，它只通过改变处理来影响结果，用“推力带来的结果变化 ÷ 推力带来的处理变化”估计被推动的那部分人的效应。</p>
+  </section>
+
+  <section class="card lab">
+    <h2><span class="num">2</span>交互实验 <span class="tag-sim">模拟</span></h2>
+
+    <h3>实验 1：满减门槛的断点回归</h3>
+    <p class="note">4,000 个订单，满 100 元可用满减券，看用券对 30 天复购金额的影响（真实跳跃 = 3 元）。复购金额本身随订单金额弯曲变化。</p>
+    <div id="cr"></div>
+    <div class="chart" id="chr1"></div>
+    <div id="lgr"></div>
+    <div class="readout" id="rr"></div>
+    <h3>订单金额的分布（检查门槛处有没有“堆积”）</h3>
+    <div class="chart" id="chr2"></div>
+    <p class="note small">蓝色是门槛下方 95–100 元，橙色是门槛上方 100–105 元。没有凑单时两格应该差不多高。正式检验用 McCrary 密度检验（Stata / R 的 <code>rddensity</code>）。</p>
+    <h3>估计值随带宽怎么变</h3>
+    <div class="chart" id="chr3"></div>
+    <div class="btnrow">
+      <button class="btn primary" id="br-again" type="button">再模拟一次</button>
+      <button class="btn" id="br-reset" type="button">重置</button>
+    </div>
+    <div class="tasks">
+      <details class="try"><summary>不凑单时，把带宽从 15 拖到 5，再拖到 40 和 60，估计会怎样？</summary>
+        <div class="ans">带宽 5：几乎无偏，但标准差约 <strong>1.19</strong>（重复 500 次），区间很宽；带宽 15：偏差约 −0.04、标准差 0.69；带宽 40：标准差降到 0.43，但偏差约 <strong>−0.97</strong>；带宽 60：偏差 −2.36。带宽越宽，用到离门槛越远的人，直线拟合不住弯曲，偏差变大；越窄，样本少，方差变大。实际中用 CCT 方法自动选带宽（Stata / R 的 <code>rdrobust</code>）。</div></details>
+      <details class="try"><summary>恢复带宽 15，把凑单比例拖到 60%。分布图和估计怎么变？</summary>
+        <div class="ans">门槛上方 100–105 元的订单明显堆积（verify 里的一份数据：100–105 元 500 单，95–100 元只有 233 单），跳跃估计平均偏大约 <strong>+3.7</strong>（真实 3，平均估出约 6.7）。凑单的人更投入、本来复购就多，门槛两侧的人不再可比，RDD 失效。</div></details>
+      <details class="try"><summary>凑单 60% 时把带宽拖到 60，估计反而接近 3 了，说明宽带宽能解决凑单问题吗？</summary>
+        <div class="ans">不能，这是巧合：凑单带来的正偏差，恰好被宽带宽的曲率负偏差（不凑单时带宽 60 的偏差约 −2.4）抵消了，重复模拟平均偏差约 −0.2。两种偏差同时存在时，估计“看起来对”毫无意义。门槛被操纵时，应该换研究设计（比如随机发券），而不是调带宽。</div></details>
+    </div>
+
+    <h3>实验 2：鼓励设计与 Wald 估计</h3>
+    <p class="note">想知道“用了新功能‘一起看’会让人多看多久”。不能强迫用户使用，但可以随机给一半用户发推送鼓励使用。1 万个用户分三类：依从者（收到推送才用）、总是接受者（不管推送都用）、从不接受者（都不用）。三类人本来的观看时长不同：总是接受者 60 分钟、依从者 40、从不接受者 30。</p>
+    <div id="ci"></div>
+    <div class="chart" id="chi1"></div>
+    <div id="lgi"></div>
+    <div class="readout" id="ri"></div>
+    <div class="chart" id="chi2"></div>
+    <div class="btnrow">
+      <button class="btn primary" id="bi-again" type="button">再模拟一次</button>
+      <button class="btn" id="bi-reset" type="button">重置</button>
+    </div>
+    <div class="tasks">
+      <details class="try"><summary>默认参数：朴素比较“用了 vs 没用”得出多少？Wald 估计呢？</summary>
+        <div class="ans">朴素比较约 <strong>32 分钟</strong>（理论值 32.0），因为用的人里有很多本来就爱看的总是接受者。Wald = ITT ÷ 第一阶段 ≈ 3.0 ÷ 0.30 ≈ <strong>10</strong>，正好是依从者的效应（verify 里的一次模拟为 9.6 ± 2.7）。</div></details>
+      <details class="try"><summary>把总是接受者的效应拖到 30，Wald 估计变不变？它等于全体平均效应吗？</summary>
+        <div class="ans">Wald 不变，仍约 10：总是接受者在两组里都用，推送没有改变他们，所以他们的效应进不了 Wald。全体平均效应 ATE 变成 14，两者不同。IV 估计的是<strong>依从者的平均效应</strong>（LATE），不是所有人的。</div></details>
+      <details class="try"><summary>把依从者占比拖到 5%、再到 2%，Wald 的区间怎么变？</summary>
+        <div class="ans">区间急剧变宽：依从者 30% 时 Wald 的标准差约 1.3，5% 时约 10，2% 时约 97（重复 1,000 次）。第一阶段太弱（弱工具变量）时，分母接近 0，估计极不稳定。经验上要求第一阶段的 F 统计量足够大（常说 &gt;10）。</div></details>
+    </div>
+  </section>
+
+  <section class="card formulas">
+    <h2><span class="num">3</span>关键公式</h2>
+    <div class="formula">
+      <div class="texd">\tau_{RDD}=\lim_{x\downarrow c}E[Y\mid X=x]-\lim_{x\uparrow c}E[Y\mid X=x]</div>
+      <p class="plain">断点处结果的跳跃。实际用门槛两侧带宽 h 内的局部线性回归估计两个极限，三角核让离门槛近的点权重更大。估计的是“门槛附近的人”的效应，不是全体的平均效应。</p>
+    </div>
+    <div class="formula">
+      <div class="texd">\widehat{\mathrm{LATE}}=\frac{E[Y\mid Z=1]-E[Y\mid Z=0]}{E[D\mid Z=1]-E[D\mid Z=0]}=\frac{\text{ITT}}{\text{第一阶段}}</div>
+      <p class="plain">Wald 估计量：推送对结果的影响 ÷ 推送对使用率的影响。在 Stata 里就是 <code>ivregress 2sls y (d = z), vce(robust)</code>，单个二值工具变量时两者完全相等。</p>
+    </div>
+    <div class="formula">
+      <div class="texd">\text{ITT}=\pi_c\cdot\tau_c\quad\Rightarrow\quad \frac{\text{ITT}}{\pi_c}=\tau_c</div>
+      <p class="plain">推送只改变了依从者（占比 π_c）的行为，所以 ITT 等于依从者占比乘以依从者效应；第一阶段正好估出 π_c。</p>
+    </div>
+  </section>
+
+  <section class="card pitch">
+    <h2><span class="num">4</span>面试口述版（30 秒）</h2>
+    <blockquote>断点回归利用一个门槛：门槛附近的人几乎相同，只是分到了两边，所以比较门槛两侧的结果跳跃就能得到局部的因果效应。关键是门槛不能被操纵，比如满 100 减 10，用户会凑单，门槛上方会堆积更投入的用户，RDD 就失效了，可以用密度检验发现；带宽是偏差和方差的取舍，用局部线性和 CCT 稳健带宽，不要用高阶多项式。工具变量适合处理不能随机分配、但能随机“鼓励”的情况：工具变量要和处理相关、只通过处理影响结果、本身随机，并且没有“反着来”的人。这时 Wald 估计，也就是 ITT 除以第一阶段，估计的是依从者的平均效应 LATE，不是全体的 ATE；第一阶段太弱时估计会非常不稳定。</blockquote>
+  </section>
+
+  <section class="card myths">
+    <h2><span class="num">5</span>常见误区</h2>
+    <ul>
+      <li><span class="wrong">✗ “满减门槛两侧的用户近乎随机，可以直接做 RDD”。</span><br><span class="right">✓</span> 用户会主动凑单，门槛上方会堆积行为不同的人（实验 1），门槛两侧不再可比。先画金额分布、做密度检验。</li>
+      <li><span class="wrong">✗ “RDD 估计的是全体的平均效应，或者叫 LATE”。</span><br><span class="right">✓</span> 精确断点估计的是<strong>门槛处</strong>那部分人的效应，离门槛远的人效应可能不同；只有在模糊断点（过门槛只是提高了处理概率）时，才是门槛处依从者的局部效应。</li>
+      <li><span class="wrong">✗ “用高阶多项式拟合全部数据更准”。</span><br><span class="right">✓</span> 高阶多项式在边界处很不稳定，会给出离谱的跳跃；推荐门槛附近的局部线性回归。</li>
+      <li><span class="wrong">✗ “IV 估计的是平均处理效应”。</span><br><span class="right">✓</span> 是依从者的平均效应（LATE）。总是接受者和从不接受者的效应，数据里根本看不到（实验 2 第 2 题）。</li>
+      <li><span class="wrong">✗ “比较用了和没用功能的人就能知道功能的效果”。</span><br><span class="right">✓</span> 用不用是自己选的，主动使用的人本来就更活跃，这是相关不是因果（实验 2 的朴素比较高估三倍多）。</li>
+    </ul>
+  </section>
+
+  <section class="card quiz">
+    <h2><span class="num">6</span>自测题</h2>
+    <div id="quiz-list"></div>
+  </section>
+
+  <section class="card project">
+    <h2><span class="num">7</span>和 X5 项目的联系</h2>
+    <p>X5 是“发短信”的随机实验，假设所有收到短信的人都看了。如果短信里有优惠券、只有一部分人真的用了券，想知道“用券”（而不是“收到短信”）的效果，就是本页的鼓励设计：随机发短信是工具变量，项目里估计的 3.32 个百分点相当于 ITT，再除以“短信带来的用券率提升”，得到的是被短信说动去用券的人的效应。项目数据里没有用券记录，所以这只是思路，没有做这个分析。</p>
+  </section>
+</main>
+</body>
+</html>

@@ -44,7 +44,7 @@
     </div>
     <div class="tasks">
       <details class="try"><summary>把“事前每期多涨”拖到 +0.2：DID 估计偏多少？事件研究图有什么变化？</summary>
-        <div class="ans">理论上偏 <strong>+1.2</strong>（0.2 × 事后与事前的平均时间差 6 期），seed 42 的模拟估计是 3.23（真实 2）。事件研究图里事前系数排成一条上升的斜线（第 −6 期约 −1.0），一眼就能看出平行趋势不成立。</div></details>
+        <div class="ans">理论上偏 <strong>+1.2</strong>（0.2 × 事后与事前的平均时间差 6 期），verify 里的一次模拟估计是 3.23（真实 2；浏览器默认数据会略有不同）。事件研究图里事前系数排成一条上升的斜线（第 −6 期约 −1.0），一眼就能看出平行趋势不成立。</div></details>
       <details class="try"><summary>保持 +0.2，再把真实效应拖到 0。DID 会得出什么结论？</summary>
         <div class="ans">DID 估计约 <strong>1.2</strong>，而且非常显著（verify 里按单位聚类的回归 p 值约 10⁻⁴⁷），但真实效应是 0：它把处理组自己的上升趋势当成了策略效果。显著不等于因果，前提假设不成立时越显著越危险。</div></details>
       <details class="try"><summary>把“事前每期多涨”拖到 −0.1，偏差是什么方向？</summary>

@@ -221,6 +221,28 @@ for cal, tag in [(0.2, "cal02"), (np.inf, "nocal")]:
         mc(f"psm.{tag}_{k}_bias", a.mean() - 1, a.std(ddof=1) / np.sqrt(a.size))
         mc(f"psm.{tag}_{k}_sd", a.std(ddof=1), a.std(ddof=1) / np.sqrt(2 * (a.size - 1)))
 
+
+# ---------- 页面 12 ----------
+m12 = importlib.import_module("12_rdd_iv")
+i = np.arange(4000)
+xs = 40 + 120 * i / 3999
+d0 = xs - 100
+ys = 60 + 0.3 * d0 - 0.004 * d0 ** 2 + 0.0001 * d0 ** 3 + 3 * (xs >= 100) + np.sin(i)
+est, se = m12.local_linear_closed(xs, ys, 15)
+est_sm, se_sm, _ = m12.local_linear(xs, ys, 15)
+assert abs(est - est_sm) < 1e-9 and abs(se - se_sm) < 1e-9
+det("rddiv.det_est", est, tol=1e-9)
+det("rddiv.det_se", se, tol=1e-9)
+for manip, h, tag in [(False, 15, "h15"), (True, 15, "manip_h15"), (False, 40, "h40")]:
+    rng12 = np.random.default_rng(SEED)
+    e = np.array([m12.local_linear_closed(*m12.rdd_gen(4000, manip, 0.6, rng12), h)[0] - 3 for _ in range(300)])
+    mc(f"rddiv.bias_{tag}", e.mean(), e.std(ddof=1) / np.sqrt(300))
+rng12 = np.random.default_rng(SEED)
+res = [m12.iv_est(*m12.iv_gen(10_000, 0.3, 0.2, 10, 15, rng12)) for _ in range(300)]
+w = np.array([r["wald"] for r in res]); nv = np.array([r["naive"] for r in res])
+mc("rddiv.wald_mean", w.mean(), w.std(ddof=1) / np.sqrt(300))
+mc("rddiv.naive_mean", nv.mean(), nv.std(ddof=1) / np.sqrt(300))
+
 # ---------- 输出 ----------
 print("浏览器模拟（Node 运行同一份 JS）vs Python（numpy）对照")
 print("公式类：差异 ≤ 容差；模拟类：差异 ≤ 4 × 合并蒙特卡洛标准误（上百项一起检查，用 4 倍避免多重比较误报）\n")

@@ -199,4 +199,26 @@ if (Lab.sim.psm) {
   }
 }
 
+
+/* ---------- 页面 12：RDD 与 IV ---------- */
+if (Lab.sim.rddiv) {
+  const R = Lab.sim.rddiv;
+  // 确定性数据核对局部线性估计
+  const xs = [], ys = [];
+  for (let i = 0; i < 4000; i++) { const x = 40 + (120 * i) / 3999; xs.push(x); ys.push(R.f(x - 100) + (x >= 100 ? 3 : 0) + Math.sin(i)); }
+  const ll = R.localLinear(xs, ys, 15);
+  out['rddiv.det_est'] = { value: ll.est };
+  out['rddiv.det_se'] = { value: ll.se };
+  for (const [manip, h, tag] of [[false, 15, 'h15'], [true, 15, 'manip_h15'], [false, 40, 'h40']]) {
+    const r = Lab.rng(71), e = [];
+    for (let k = 0; k < 300; k++) { const d = R.rddGen(4000, manip, 0.6, r); e.push(R.localLinear(d.x, d.y, h).est - 3); }
+    const sd = Math.sqrt(Lab.stats.variance(e));
+    out[`rddiv.bias_${tag}`] = { value: Lab.stats.mean(e), se: sd / Math.sqrt(300) };
+  }
+  const r = Lab.rng(72), w = [], nv = [];
+  for (let k = 0; k < 300; k++) { const e = R.ivEst(R.ivGen(10000, 0.3, 0.2, 10, 15, r)); w.push(e.wald); nv.push(e.naive); }
+  out['rddiv.wald_mean'] = { value: Lab.stats.mean(w), se: Math.sqrt(Lab.stats.variance(w) / 300) };
+  out['rddiv.naive_mean'] = { value: Lab.stats.mean(nv), se: Math.sqrt(Lab.stats.variance(nv) / 300) };
+}
+
 console.log(JSON.stringify(out, null, 1));

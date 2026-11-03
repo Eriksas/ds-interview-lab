@@ -283,6 +283,43 @@ det("threshold.ap_1.5_0.01", m14.ap_theory(1.5, 0.01), tol=1e-6)
 det("threshold.bestf1_t_0.1", m14.best_f1(1.5, 0.1)[0], tol=2e-3)
 det("threshold.bestf1_t_0.01", m14.best_f1(1.5, 0.01)[0], tol=2e-3)
 
+
+# ---------- 页面 15 ----------
+m15 = importlib.import_module("15_bias_variance")
+from sklearn.linear_model import Lasso, Ridge  # noqa: E402
+dd = m15.js("Lab.sim.biasvar.genReg(100, Lab.rng(42))")
+Xb, yb = np.array(dd["X"]), np.array(dd["y"])
+for lam in (0.01, 0.1, 0.5, 2):
+    bl = Lasso(alpha=lam, fit_intercept=False, tol=1e-14, max_iter=1_000_000).fit(Xb, yb).coef_
+    br = Ridge(alpha=100 * lam, fit_intercept=False).fit(Xb, yb).coef_
+    for j in range(8):
+        det(f"bv.lasso_{lam}_b{j}", bl[j], tol=1e-6)
+        det(f"bv.ridge_{lam}_b{j}", br[j], tol=1e-9)
+pp = m15.js("Lab.sim.biasvar.genPoly(20, Lab.rng(42))")
+b9 = m15.fit(np.array(pp["x"]), np.array(pp["y"]), 9)
+det("bv.poly9_pred_0.33", float((m15.design([0.33], 9) @ b9)[0]), tol=1e-8)
+# 训练误差、偏差²：和 Python 独立模拟（500 次）比较，标准误用 Python 模拟各份训练集之间的差异估计
+rngbv = np.random.default_rng(SEED)
+tr = {1: [], 3: [], 12: []}
+preds = {1: [], 3: [], 12: []}
+for _ in range(300):
+    x = (np.arange(20) + 0.5) / 20
+    y = m15.f(x) + 0.3 * rngbv.normal(size=20)
+    for dgr in tr:
+        b = m15.fit(x, y, dgr)
+        tr[dgr].append(np.mean((m15.design(x, dgr) @ b - y) ** 2))
+        preds[dgr].append(m15.design(m15.GRID, dgr) @ b)
+for dgr in (1, 3, 12):
+    a = np.array(tr[dgr])
+    js[f"bv.train_deg{dgr}"]["se"] = float(a.std(ddof=1) / np.sqrt(300))
+    mc(f"bv.train_deg{dgr}", a.mean(), a.std(ddof=1) / np.sqrt(300))
+    P = np.array(preds[dgr])
+    b2 = np.mean((P.mean(0) - m15.f(m15.GRID)) ** 2)
+    # 偏差² 的模拟误差：用自助法估计
+    bs = [np.mean((P[np.random.default_rng(k).integers(0, 300, 300)].mean(0) - m15.f(m15.GRID)) ** 2) for k in range(200)]
+    js[f"bv.bias2_deg{dgr}"]["se"] = float(np.std(bs, ddof=1))
+    mc(f"bv.bias2_deg{dgr}", b2, float(np.std(bs, ddof=1)))
+
 # ---------- 输出 ----------
 print("浏览器模拟（Node 运行同一份 JS）vs Python（numpy）对照")
 print("公式类：差异 ≤ 容差；模拟类：差异 ≤ 4 × 合并蒙特卡洛标准误（上百项一起检查，用 4 倍避免多重比较误报）\n")

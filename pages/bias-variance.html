@@ -1,0 +1,119 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>偏差-方差与正则化 · DS 面试实验室</title>
+<meta name="description" content="多项式拟合的欠拟合与过拟合、偏差²和方差；L1 和 L2 的系数路径：L1 会把系数压到 0，L2 只缩小。">
+<script>try{var t=localStorage.getItem('dsil.theme');t=t&&JSON.parse(t);if(t==='light'||t==='dark')document.documentElement.setAttribute('data-theme',t)}catch(e){}</script>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.css">
+<link rel="stylesheet" href="../assets/css/site.css">
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.9.0/d3.min.js"></script>
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.js"></script>
+<script defer src="../assets/js/core.js"></script>
+<script defer src="../assets/js/registry.js"></script>
+<script defer src="../assets/js/quiz.js"></script>
+<script defer src="../assets/js/pages/bias-variance.js"></script>
+</head>
+<body data-page="bias-variance">
+<main>
+  <h1>偏差-方差与正则化</h1>
+  <p class="subtitle">机器学习 · 面试频率中 · 约 20 分钟</p>
+
+  <section class="card intuition">
+    <h2><span class="num">1</span>一句话直觉</h2>
+    <p>模型太简单，抓不住规律（偏差大）；太复杂，连噪声也背下来，换一批数据就变样（方差大）。正则化给复杂度“收税”，用一点偏差换掉一大块方差。</p>
+  </section>
+
+  <section class="card lab">
+    <h2><span class="num">2</span>交互实验 <span class="tag-sim">模拟</span></h2>
+
+    <h3>实验 1：多项式拟合，欠拟合 vs 过拟合</h3>
+    <p class="note">真实规律是 y = sin(2πx)，每份训练集 20 个点（x 等间隔，噪声标准差 0.3）。下面的误差曲线是 150 份训练集的平均。</p>
+    <div id="c1"></div>
+    <div class="chart" id="ch1"></div>
+    <div id="lg1"></div>
+    <div class="chart" id="ch2"></div>
+    <div id="lg2"></div>
+    <div class="readout" id="r1"></div>
+    <div class="btnrow">
+      <button class="btn primary" id="b1-again" type="button">换一份训练集</button>
+      <button class="btn" id="b1-reset" type="button">重置</button>
+    </div>
+    <div class="tasks">
+      <details class="try"><summary>比较 1 阶、3 阶、12 阶的训练误差和测试误差。</summary>
+        <div class="ans">1 阶：训练 0.27、测试 0.30，偏差² 0.20，直线抓不住弯曲，是<strong>欠拟合</strong>；3 阶：训练 0.075、测试 <strong>0.114</strong>，测试误差最低；12 阶：训练只有 0.031，测试却升到 0.57，方差 0.42，是<strong>过拟合</strong>（verify 重复 500 次）。</div></details>
+      <details class="try"><summary>训练误差随阶数一直下降吗？测试误差呢？</summary>
+        <div class="ans">训练误差一直下降：模型越复杂，越能贴合训练点。测试误差先降后升，呈 U 形；它不可能低于噪声 σ²=0.09。所以选模型要看验证集 / 交叉验证的误差，而不是训练误差。</div></details>
+      <details class="try"><summary>拖到 12 阶，多点几次“换一份训练集”；再拖到 1 阶点几次。</summary>
+        <div class="ans">12 阶时曲线每次都剧烈变化，尤其在两端：这就是<strong>方差</strong>大。1 阶时每次几乎一样，但始终是错的：这就是<strong>偏差</strong>大。</div></details>
+    </div>
+
+    <h3>实验 2：L1（Lasso）和 L2（岭回归）的系数路径</h3>
+    <p class="note">100 个样本、8 个两两相关的特征（都标准化），只有 x1、x2、x5 真的有用（真实系数 3、1.5、2），其余 5 个真实系数是 0。拖动 λ 看两种正则化下每个系数怎么变。</p>
+    <div id="c2"></div>
+    <div class="grid2"><div class="chart" id="ch3"></div><div class="chart" id="ch4"></div></div>
+    <div id="lg3"></div>
+    <div class="readout" id="r2"></div>
+    <div class="tbl-wrap" id="t2"></div>
+    <div class="btnrow"><button class="btn" id="b2-reset" type="button">重置</button></div>
+    <div class="tasks">
+      <details class="try"><summary>默认 λ=0.1：Lasso 和岭回归各有几个系数恰好是 0？</summary>
+        <div class="ans">Lasso 有 <strong>2 个</strong>，岭回归 <strong>0 个</strong>（verify 用 sklearn 在同一份数据上重算）。</div></details>
+      <details class="try"><summary>把 λ 拖到 0.5，Lasso 留下了哪些特征？岭回归呢？</summary>
+        <div class="ans">Lasso 正好留下 x1、x2、x5，其余 5 个都是 0，做了特征选择；岭回归所有系数都不是 0，最小的绝对值还有约 0.35。岭回归只会把系数整体缩小，不能直接用来筛特征。</div></details>
+      <details class="try"><summary>把 λ 拖到最大（10），两种方法的系数是什么样？</summary>
+        <div class="ans">Lasso 全部是 0（这份数据上 λ 超过 5.32 就全为 0）；岭回归的系数都被压得很小，但仍然不是 0。</div></details>
+    </div>
+  </section>
+
+  <section class="card formulas">
+    <h2><span class="num">3</span>关键公式</h2>
+    <div class="formula">
+      <div class="texd">E\big[(y-\hat f(x))^2\big]=\mathrm{Bias}\big[\hat f(x)\big]^2+\mathrm{Var}\big[\hat f(x)\big]+\sigma^2</div>
+      <p class="plain">测试误差 = 偏差² + 方差 + 不可约的噪声。期望是对“换不同的训练集”取的。</p>
+    </div>
+    <div class="formula">
+      <div class="texd">\text{Lasso：}\min_\beta\ \frac{1}{2n}\|y-X\beta\|^2+\lambda\|\beta\|_1\qquad \text{岭回归：}\min_\beta\ \frac{1}{2n}\|y-X\beta\|^2+\frac{\lambda}{2}\|\beta\|_2^2</div>
+      <p class="plain">L1 惩罚系数绝对值之和，L2 惩罚平方和。特征要先标准化，否则惩罚对不同尺度的特征不公平。</p>
+    </div>
+    <div class="formula">
+      <div class="texd">\hat\beta^{L1}=\mathrm{sign}(z)\,\max(|z|-\lambda,0),\qquad \hat\beta^{L2}=\frac{z}{1+\lambda}</div>
+      <p class="plain">特征正交、标准化时的解（z 是不加惩罚时的系数）。L1 是“软阈值”：小于 λ 的直接变成 0；L2 只是按比例缩小，永远不会正好等于 0。</p>
+    </div>
+  </section>
+
+  <section class="card pitch">
+    <h2><span class="num">4</span>面试口述版（30 秒）</h2>
+    <blockquote>测试误差可以拆成偏差平方、方差和噪声。模型简单时偏差大、欠拟合；复杂时方差大、过拟合，训练误差一直下降而测试误差呈 U 形，所以要用验证集或交叉验证选复杂度。处理过拟合可以加数据、减少特征、正则化、早停，或者用 Bagging、随机森林这类主要降方差的集成方法；Boosting 主要降偏差。正则化里 L1 惩罚绝对值，会把不重要的系数压到正好为 0，可以做特征选择；L2 惩罚平方，只会把系数整体缩小，对相关特征更稳定；两者结合就是 Elastic Net。用之前要先标准化特征。</blockquote>
+  </section>
+
+  <section class="card myths">
+    <h2><span class="num">5</span>常见误区</h2>
+    <ul>
+      <li><span class="wrong">✗ “L2 正则化也能把系数压到 0，可以用来筛选特征”。</span><br><span class="right">✓</span> L2 只缩小，不会正好为 0（实验 2）。要筛特征用 L1 或 Elastic Net。</li>
+      <li><span class="wrong">✗ “训练误差越小，模型越好”。</span><br><span class="right">✓</span> 训练误差随复杂度单调下降，测试误差是 U 形（实验 1）。</li>
+      <li><span class="wrong">✗ “Boosting 主要降低方差”。</span><br><span class="right">✓</span> Boosting 一棵接一棵地拟合残差，主要降<strong>偏差</strong>；Bagging / 随机森林对多个模型取平均，主要降<strong>方差</strong>。</li>
+      <li><span class="wrong">✗ “梯度提升树不直接使用正则化”。</span><br><span class="right">✓</span> XGBoost、LightGBM 的目标函数里就有对叶子数和叶子权重的正则项，另外还有学习率、树深、采样等手段。</li>
+      <li><span class="wrong">✗ 不标准化就直接做 Lasso / 岭回归。</span><br><span class="right">✓</span> 惩罚对系数大小一视同仁，单位不同（元 vs 万元）的特征会被不公平地惩罚，要先标准化。</li>
+      <li><span class="wrong">✗ “Lasso 在高度相关的特征里会稳定地选出最重要的那个”。</span><br><span class="right">✓</span> 相关特征之间 Lasso 常常随意保留其中一个，换一份数据可能换一个；需要稳定时用 Elastic Net 或岭回归。</li>
+    </ul>
+  </section>
+
+  <section class="card quiz">
+    <h2><span class="num">6</span>自测题</h2>
+    <div id="quiz-list"></div>
+  </section>
+
+  <section class="card project">
+    <h2><span class="num">7</span>和 X5 项目的联系</h2>
+    <ul>
+      <li>增益信号很弱（平均 3 个百分点左右），复杂模型容易过拟合：LightGBM T-learner 验证集 Qini 系数 0.0102，测试集只剩 <strong>0.0048</strong>；逻辑回归 T-learner 验证集 0.0155、测试集 <strong>0.0129</strong>。简单模型方差小，在弱信号下反而更稳。</li>
+      <li>把 LightGBM 调“保守”（更浅的树、更强的约束，相当于加正则化）后，T-learner 的测试集 Qini 系数从 0.0048 升到 0.0069。</li>
+      <li>12 个候选模型只在验证集上比较、测试集只用一次，就是为了不让“选模型”这一步本身过拟合。</li>
+    </ul>
+    <p class="note">数字来自项目的 <code>results/stage3_model_comparison.csv</code>。</p>
+  </section>
+</main>
+</body>
+</html>

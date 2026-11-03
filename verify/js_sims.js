@@ -262,4 +262,23 @@ if (Lab.sim.threshold) {
   out['threshold.bestf1_t_0.01'] = { value: T.bestF1(1.5, 0.01).t };
 }
 
+
+/* ---------- 页面 15：偏差-方差与正则化 ---------- */
+if (Lab.sim.biasvar) {
+  const B = Lab.sim.biasvar;
+  const d = B.genReg(100, Lab.rng(42));
+  for (const lam of [0.01, 0.1, 0.5, 2]) {
+    B.lasso(d.X, d.y, lam).forEach((v, j) => (out[`bv.lasso_${lam}_b${j}`] = { value: v }));
+    B.ridge(d.X, d.y, lam).forEach((v, j) => (out[`bv.ridge_${lam}_b${j}`] = { value: v }));
+  }
+  const p = B.genPoly(20, Lab.rng(42));
+  const m = B.fitPoly(p.x, p.y, 9);
+  out['bv.poly9_pred_0.33'] = { value: m.predict(0.33) };
+  const c = B.curves(20, 12, 300, 91);
+  for (const deg of [1, 3, 12]) {
+    out[`bv.train_deg${deg}`] = { value: c[deg - 1].train, n: 300 };
+    out[`bv.bias2_deg${deg}`] = { value: c[deg - 1].bias2, n: 300 };
+  }
+}
+
 console.log(JSON.stringify(out, null, 1));

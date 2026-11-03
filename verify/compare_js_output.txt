@@ -1,29 +1,45 @@
 浏览器模拟（Node 运行同一份 JS）vs Python（numpy）对照
 公式类：差异 ≤ 容差；模拟类：差异 ≤ 3 × 合并蒙特卡洛标准误
 
-检查项                         类型              JS      Python         差异         允许  结果
-power.power_default           公式       0.79723     0.79723    0.00000    0.00000  通过
-power.power_half_n            公式       0.50566     0.50566    0.00000    0.00000  通过
-power.n_calc_default          公式   57760.00000 57760.00000    0.00000    0.00000  通过
-power.fdr_pi20_default        模拟       0.20619     0.19149    0.01470    0.08421  通过
-power.fdr_pi20_big            模拟       0.20210     0.19836    0.00374    0.00848  通过
-power.null_sig_rate           模拟       0.05052     0.04953    0.00099    0.00207  通过
-peeking.fpr_day7_default      模拟       0.16650     0.17325    0.00675    0.02519  通过
-peeking.fpr_day14_default     模拟       0.22275     0.22475    0.00200    0.02796  通过
-peeking.fpr_day7_big          模拟       0.16685     0.16560    0.00125    0.00499  通过
-peeking.fpr_day14_big         模拟       0.22095     0.21860    0.00235    0.00556  通过
-peeking.K5_theta0_naive_default模拟       0.14130     0.14415    0.00285    0.01049  通过
-peeking.K5_theta0_naive_big   模拟       0.14309     0.14159    0.00151    0.00331  通过
-peeking.K5_theta28_naive      模拟       0.84904     0.84889    0.00016    0.00340  通过
-peeking.K5_theta0_pocock_default模拟       0.04880     0.05110    0.00230    0.00654  通过
-peeking.K5_theta0_pocock_big  模拟       0.05067     0.05032    0.00036    0.00208  通过
-peeking.K5_theta28_pocock     模拟       0.71021     0.70751    0.00270    0.00431  通过
-peeking.K5_theta0_obf_default 模拟       0.05065     0.04990    0.00075    0.00656  通过
-peeking.K5_theta0_obf_big     模拟       0.05037     0.04940    0.00097    0.00207  通过
-peeking.K5_theta28_obf        模拟       0.78866     0.78773    0.00093    0.00388  通过
-peeking.pocock_K5             公式       2.41320     2.41316    0.00004    0.00010  通过
-peeking.obf_cb_K5             公式       2.04010     2.04006    0.00004    0.00010  通过
-peeking.pocock_K3             公式       2.28950     2.28949    0.00001    0.00010  通过
-peeking.obf_cb_K3             公式       2.00400     2.00400    0.00000    0.00010  通过
+检查项                                   类型              JS      Python         差异         允许  结果
+power.power_default                     公式       0.79723     0.79723    0.00000    0.00000  通过
+power.power_half_n                      公式       0.50566     0.50566    0.00000    0.00000  通过
+power.n_calc_default                    公式   57760.00000 57760.00000    0.00000    0.00000  通过
+power.fdr_pi20_default                  模拟       0.20619     0.19149    0.01470    0.08421  通过
+power.fdr_pi20_big                      模拟       0.20210     0.19836    0.00374    0.00848  通过
+power.null_sig_rate                     模拟       0.05052     0.04953    0.00099    0.00207  通过
+peeking.fpr_day7_default                模拟       0.16650     0.17325    0.00675    0.02519  通过
+peeking.fpr_day14_default               模拟       0.22275     0.22475    0.00200    0.02796  通过
+peeking.fpr_day7_big                    模拟       0.16685     0.16560    0.00125    0.00499  通过
+peeking.fpr_day14_big                   模拟       0.22095     0.21860    0.00235    0.00556  通过
+peeking.K5_theta0_naive_default         模拟       0.14130     0.14415    0.00285    0.01049  通过
+peeking.K5_theta0_naive_big             模拟       0.14309     0.14159    0.00151    0.00331  通过
+peeking.K5_theta28_naive                模拟       0.84904     0.84889    0.00016    0.00340  通过
+peeking.K5_theta0_pocock_default        模拟       0.04880     0.05110    0.00230    0.00654  通过
+peeking.K5_theta0_pocock_big            模拟       0.05067     0.05032    0.00036    0.00208  通过
+peeking.K5_theta28_pocock               模拟       0.71021     0.70751    0.00270    0.00431  通过
+peeking.K5_theta0_obf_default           模拟       0.05065     0.04990    0.00075    0.00656  通过
+peeking.K5_theta0_obf_big               模拟       0.05037     0.04940    0.00097    0.00207  通过
+peeking.K5_theta28_obf                  模拟       0.78866     0.78773    0.00093    0.00388  通过
+peeking.pocock_K5                       公式       2.41320     2.41316    0.00004    0.00010  通过
+peeking.obf_cb_K5                       公式       2.04010     2.04006    0.00004    0.00010  通过
+peeking.pocock_K3                       公式       2.28950     2.28949    0.00001    0.00010  通过
+peeking.obf_cb_K3                       公式       2.00400     2.00400    0.00000    0.00010  通过
+multiple.default_none_count             公式       6.00000     6.00000    0.00000    0.00000  通过
+multiple.default_bonf_count             公式       1.00000     1.00000    0.00000    0.00000  通过
+multiple.default_holm_count             公式       1.00000     1.00000    0.00000    0.00000  通过
+multiple.default_bh_count               公式       5.00000     5.00000    0.00000    0.00000  通过
+multiple.none_fwer_default              模拟       0.53100     0.55525    0.02425    0.03341  通过
+multiple.none_fdr_default               模拟       0.13024     0.13572    0.00548    0.00924  通过
+multiple.bonf_fwer_default              模拟       0.03775     0.04300    0.00525    0.01320  通过
+multiple.bonf_fdr_default               模拟       0.01285     0.01380    0.00096    0.00474  通过
+multiple.bh_fwer_default                模拟       0.14725     0.16350    0.01625    0.02430  通过
+multiple.bh_fdr_default                 模拟       0.03646     0.03986    0.00340    0.00645  通过
+multiple.none_fwer_big                  模拟       0.53868     0.53750    0.00118    0.01058  通过
+multiple.none_fdr_big                   模拟       0.13163     0.13130    0.00033    0.00291  通过
+multiple.bonf_fwer_big                  模拟       0.03698     0.03893    0.00195    0.00405  通过
+multiple.bonf_fdr_big                   模拟       0.01218     0.01286    0.00068    0.00150  通过
+multiple.bh_fwer_big                    模拟       0.15240     0.15620    0.00380    0.00766  通过
+multiple.bh_fdr_big                     模拟       0.03720     0.03811    0.00092    0.00203  通过
 
-共 23 项，通过 23 项
+共 39 项，通过 39 项

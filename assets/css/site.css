@@ -337,3 +337,18 @@ table.tbl { border-collapse: collapse; width: 100%; font-size: 14px; }
 @media (max-width: 480px) {
   .formula .katex-display > .katex { font-size: 0.95em; }
 }
+
+/* ---------- 多重检验方格 ---------- */
+.tiles { display: flex; flex-wrap: wrap; gap: 6px; margin: 8px 0; }
+.tile {
+  width: 32px; height: 32px; border-radius: 8px; display: inline-grid; place-items: center;
+  font-size: 16px; font-weight: 700; border: 2px solid transparent; line-height: 1;
+}
+.tile.tp { background: var(--good); color: #fff; }
+.tile.fp { background: var(--bad); color: #fff; }
+.tile.fn { border-color: var(--s2); color: var(--s2); background: transparent; }
+.tile.tn { background: var(--surface-2); color: var(--muted); }
+.tile-legend { display: flex; flex-wrap: wrap; gap: 4px 14px; font-size: 13px; color: var(--text-2); align-items: center; }
+.tile-legend .tile { width: 20px; height: 20px; font-size: 12px; border-radius: 5px; vertical-align: middle; margin-right: 4px; }
+.tbl.compact { font-size: 13px; }
+.tbl.compact th, .tbl.compact td { padding: 5px 4px; }

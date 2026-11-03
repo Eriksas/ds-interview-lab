@@ -1,0 +1,129 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>多重检验 · DS 面试实验室</title>
+<meta name="description" content="FWER 和 FDR 的区别；拖动一组 p 值，对比 Bonferroni、Holm 和 BH 各拒绝哪些。">
+<script>try{var t=localStorage.getItem('dsil.theme');t=t&&JSON.parse(t);if(t==='light'||t==='dark')document.documentElement.setAttribute('data-theme',t)}catch(e){}</script>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.css">
+<link rel="stylesheet" href="../assets/css/site.css">
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.9.0/d3.min.js"></script>
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.js"></script>
+<script defer src="../assets/js/core.js"></script>
+<script defer src="../assets/js/registry.js"></script>
+<script defer src="../assets/js/quiz.js"></script>
+<script defer src="../assets/js/pages/multiple.js"></script>
+</head>
+<body data-page="multiple">
+<main>
+  <h1>多重检验</h1>
+  <p class="subtitle">AB 实验 · 面试频率中 · 约 20 分钟</p>
+
+  <section class="card intuition">
+    <h2><span class="num">1</span>一句话直觉</h2>
+    <p>同时检验的东西越多（指标、实验组、人群），总会有几个“碰巧显著”。</p>
+    <p>校正有两种目标：FWER 管“一个假阳性都别出”，FDR 管“显著的结果里假阳性别太多”。</p>
+  </section>
+
+  <section class="card lab">
+    <h2><span class="num">2</span>交互实验</h2>
+
+    <h3>实验 1：FWER 和 FDR 差在哪 <span class="tag-sim">模拟</span></h3>
+    <p class="note">同时做 m 个检验，其中一部分真有效。每个方格是一个检验，按所选方法的判断着色。</p>
+    <div id="c1"></div>
+    <div class="tile-legend">
+      <span><span class="tile tp">✓</span>真阳性</span>
+      <span><span class="tile fp">✗</span>假阳性</span>
+      <span><span class="tile fn">○</span>漏掉的真效应</span>
+      <span><span class="tile tn">·</span>真阴性</span>
+    </div>
+    <div class="tiles" id="grid1"></div>
+    <p class="note" id="ex1"></p>
+    <div class="tbl-wrap" id="t1"></div>
+    <p class="note small" id="cap1"></p>
+    <div class="btnrow">
+      <button class="btn primary" id="b1-again" type="button">再模拟一次</button>
+      <button class="btn" id="b1-reset" type="button">重置</button>
+    </div>
+    <div class="tasks">
+      <details class="try"><summary>把“真有效的比例”拖到 0，m=20，不校正时 FWER 是多少？</summary>
+        <div class="ans">约 <strong>64%</strong>（公式 1−0.95²⁰=64.2%）：20 个都没效果，也有将近三分之二的机会至少冒出一个“显著”。Bonferroni、Holm、BH 都把它压回 5% 左右。这时 FDR 和 FWER 相等，因为只要判了显著就全是假的。</div></details>
+      <details class="try"><summary>恢复默认（m=20、25% 真有效），比较 Bonferroni 和 BH 的功效和 FDR。</summary>
+        <div class="ans">Bonferroni 功效约 <strong>49%</strong>、FDR 约 1%；BH 功效约 <strong>65%</strong>、FDR 约 3.8%（理论上限 π₀α=0.75×0.05=3.75%）。BH 允许少量假阳性，换来多找出约三分之一的真效应。代价是 BH 的 FWER 约 15%，它本来就不管这个。</div></details>
+      <details class="try"><summary>把 m 拖到 50，再看 Bonferroni 的功效。</summary>
+        <div class="ans">门槛变成 0.05/50=0.001，功效明显下降。检验越多，Bonferroni 越保守；探索性的下钻分析（几十个人群、几十个指标）更适合用 BH。</div></details>
+    </div>
+
+    <h3>实验 2：拖动 p 值，看谁被拒绝</h3>
+    <p class="note">8 个 p 值按从小到大排好。上下拖动圆点改变 p 值，表格实时显示四种方法各拒绝哪些（α=0.05；“原始”= 不校正）。</p>
+    <div class="chart" id="ch2"></div>
+    <div id="lg2"></div>
+    <div class="readout" id="r2"></div>
+    <div class="tbl-wrap" id="t2"></div>
+    <div class="btnrow">
+      <button class="btn primary" id="b2-rand" type="button">随机生成一组</button>
+      <button class="btn" id="b2-reset" type="button">重置</button>
+    </div>
+    <div class="tasks">
+      <details class="try"><summary>默认这组 p 值里，第 2 名（p=0.014）在 BH 线的上方，为什么 BH 还是拒绝了它？</summary>
+        <div class="ans">BH 是“从后往前找”：找<strong>最大</strong>的 k 使 p₍ₖ₎ ≤ kα/m，然后把前 k 个全部拒绝。这里第 5 名 0.030 ≤ 5×0.05/8=0.03125，所以 k=5，前 5 个都拒绝，包括在线上方的第 2 名。这叫 step-up（逐步向上）过程。</div></details>
+      <details class="try"><summary>把第 5 名（p=0.030）拖到 0.035 左右，BH 拒绝几个？再把第 4 名（0.022）拖到 0.027 左右呢？</summary>
+        <div class="ans">第一步拒绝 <strong>4 个</strong>：第 5 名超过了 5α/m=0.03125，最大的 k 变成 4（0.022 ≤ 0.025），前 4 个照样全拒绝，包括线上方的第 2 名。第二步拒绝 <strong>3 个</strong>：第 4 名也超过了 0.025，k 变成 3。一个点的变化会连带改变排在它前面的点的命运。</div></details>
+      <details class="try"><summary>Bonferroni 和 Holm 在默认数据上为什么都只拒绝 1 个？</summary>
+        <div class="ans">Bonferroni 门槛是 0.05/8=0.00625，只有 0.001 过线。Holm 第 1 个用 0.05/8，第 2 个用 0.05/7≈0.0071，0.014 没过就停了。Holm 永远不比 Bonferroni 拒绝得少，同样控制 FWER，所以没有理由用 Bonferroni 而不用 Holm。</div></details>
+    </div>
+  </section>
+
+  <section class="card formulas">
+    <h2><span class="num">3</span>关键公式</h2>
+    <div class="formula">
+      <div class="texd">\mathrm{FWER}=P(V\ge 1),\qquad \mathrm{FDR}=E\!\left[\frac{V}{\max(R,1)}\right]</div>
+      <p class="plain">V 是假阳性个数，R 是判显著的总个数。FWER 是“至少一个假阳性”的概率；FDR 是“显著结果里假阳性所占比例”的期望，是比例，不是个数。</p>
+    </div>
+    <div class="formula">
+      <div class="texd">1-(1-\alpha)^m</div>
+      <p class="plain">不校正时，m 个相互独立且都没效果的检验，至少一个显著的概率。m=20 时约 64%。</p>
+    </div>
+    <div class="formula">
+      <div class="texd">\text{Bonferroni：}\ p_i\le \frac{\alpha}{m}\qquad \text{Holm：}\ p_{(i)}\le\frac{\alpha}{m-i+1}\ \text{（不满足就停）}</div>
+      <p class="plain">两者都控制 FWER；Holm 从最小的 p 开始逐个放宽门槛，总是至少和 Bonferroni 一样有力。</p>
+    </div>
+    <div class="formula">
+      <div class="texd">\text{BH：}\ k=\max\Big\{i:\ p_{(i)}\le \frac{i}{m}\alpha\Big\},\ \text{拒绝}\ p_{(1)},\dots,p_{(k)}</div>
+      <p class="plain">控制 FDR。检验相互独立（或正相关）时，FDR ≤ π₀α ≤ α，π₀ 是真零假设的比例。</p>
+    </div>
+  </section>
+
+  <section class="card pitch">
+    <h2><span class="num">4</span>面试口述版（30 秒）</h2>
+    <blockquote>同时检验多个指标、多个实验组或多个人群时，每个都用 0.05，至少一个假阳性的概率会膨胀，20 个独立检验约 64%。校正有两类：控制 FWER，也就是至少一个假阳性的概率，用 Bonferroni 或更有力的 Holm，适合检验个数少、结论要严格的场景，比如核心指标；控制 FDR，也就是显著结果里假阳性的比例，用 BH：把 p 值从小到大排，找最大的 k 使 p₍ₖ₎ ≤ kα/m，拒绝前 k 个，适合大量指标或人群下钻的探索。实践中我会先定一个主指标，其他指标当辅助，人群下钻的发现再用新实验验证。</blockquote>
+  </section>
+
+  <section class="card myths">
+    <h2><span class="num">5</span>常见误区</h2>
+    <ul>
+      <li><span class="wrong">✗ “FDR 是假阳性的数量”。</span><br><span class="right">✓</span> FDR 是<strong>比例</strong>：判显著的结果里假阳性占多少，FP/(TP+FP)，再取期望；一个都没判显著时记为 0。</li>
+      <li><span class="wrong">✗ “BH 只拒绝落在 kα/m 线下方的点”。</span><br><span class="right">✓</span> BH 找最大的 k，然后前 k 个全部拒绝，排名靠前但在线上方的点也会被拒绝（实验 2 的第 2 名）。</li>
+      <li><span class="wrong">✗ “Bonferroni 最稳妥，都用它”。</span><br><span class="right">✓</span> 它太保守，检验一多功效就很低；同样控制 FWER，Holm 总是至少一样有力。</li>
+      <li><span class="wrong">✗ “做了 BH 校正，就可以随便下钻几十个人群找显著”。</span><br><span class="right">✓</span> 校正只管“这次做了多少检验”，管不了“看完数据再决定检验什么”。事后挑出来的人群只能当线索，要用新实验验证。</li>
+      <li><span class="wrong">✗ “A/B/C/D 多个实验组各自和对照比，不算多重检验”。</span><br><span class="right">✓</span> 算。比较的组越多，越可能有一组碰巧显著。</li>
+    </ul>
+  </section>
+
+  <section class="card quiz">
+    <h2><span class="num">6</span>自测题</h2>
+    <div id="quiz-list"></div>
+  </section>
+
+  <section class="card project">
+    <h2><span class="num">7</span>和 X5 项目的联系</h2>
+    <ul>
+      <li><strong>随机化检验</strong>：项目检查了 14 个客户信息和实验前消费变量。逐个做 t 检验时，纯随机也预期有 14×0.05=0.7 个显著；项目里 0 个显著，并且用一个<strong>联合检验</strong>（用所有协变量预测是否进实验组，看整体是否显著，p=0.190）代替 14 次单独判断，避免了多重检验问题。</li>
+      <li><strong>模型选择</strong>：12 个候选增益模型只在验证集上比较，测试集只评估一次。如果在测试集上挑最好的，就相当于做了 12 次比较再报告最好的那个，结果会偏乐观。</li>
+    </ul>
+    <p class="note">数字来自项目的 <code>results/stage1_ab_test.json</code> 和 README。</p>
+  </section>
+</main>
+</body>
+</html>

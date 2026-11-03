@@ -73,6 +73,38 @@ det("peeking.obf_cb_K5", cb5, tol=1e-4)
 det("peeking.pocock_K3", m2.pocock(3), tol=1e-4)
 det("peeking.obf_cb_K3", m2.obf(3)[0], tol=1e-4)
 
+# ---------- 页面 3 ----------
+m3 = importlib.import_module("03_multiple")
+p = np.array([0.001, 0.014, 0.016, 0.022, 0.03, 0.045, 0.3, 0.7])
+for k, f in [("none", m3.none), ("bonf", m3.bonf), ("holm", m3.holm), ("bh", m3.bh)]:
+    det(f"multiple.default_{k}_count", float(f(p).sum()), tol=0)
+
+
+def fdr_runs(n, seed):
+    """逐次记录 FDP，用来估计 FDR 的蒙特卡洛标准误。"""
+    rng = np.random.default_rng(seed)
+    truth = np.arange(20) < 5
+    fdp = {"none": [], "bonf": [], "bh": []}
+    fw = {"none": 0, "bonf": 0, "bh": 0}
+    for _ in range(n):
+        z = rng.normal(size=20) + 3 * truth
+        pv = 2 * m3.Z.sf(np.abs(z))
+        for k, f in [("none", m3.none), ("bonf", m3.bonf), ("bh", m3.bh)]:
+            rej = f(pv)
+            V, R = np.sum(rej & ~truth), rej.sum()
+            fdp[k].append(V / max(R, 1))
+            fw[k] += V > 0
+    return fdp, fw
+
+
+for tag, n in [("default", 4000), ("big", 40000)]:
+    fdp, fw = fdr_runs(n, SEED)
+    for k in ["none", "bonf", "bh"]:
+        mc(f"multiple.{k}_fwer_{tag}", *prop(fw[k], n))
+        arr = np.array(fdp[k])
+        js[f"multiple.{k}_fdr_{tag}"]["se"] = float(arr.std(ddof=1) / np.sqrt(n))  # 两边模拟次数相同，用 Python 的方差近似 JS 的标准误
+        mc(f"multiple.{k}_fdr_{tag}", arr.mean(), arr.std(ddof=1) / np.sqrt(n))
+
 # ---------- 输出 ----------
 print("浏览器模拟（Node 运行同一份 JS）vs Python（numpy）对照")
 print("公式类：差异 ≤ 容差；模拟类：差异 ≤ 3 × 合并蒙特卡洛标准误\n")

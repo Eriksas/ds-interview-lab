@@ -53,4 +53,18 @@ if (Lab.sim.peeking) {
   out['peeking.obf_cb_K3'] = { value: P.OBF_CB[3] };
 }
 
+/* ---------- 页面 3：多重检验 ---------- */
+if (Lab.sim.multiple) {
+  const M = Lab.sim.multiple;
+  const p = [0.001, 0.014, 0.016, 0.022, 0.03, 0.045, 0.3, 0.7];
+  for (const k of ['none', 'bonf', 'holm', 'bh']) out[`multiple.default_${k}_count`] = { value: M[k](p, 0.05).filter(Boolean).length };
+  for (const [tag, n] of [['default', 4000], ['big', 40000]]) {
+    const r = M.simulate(20, 0.25, 3, n, 42);
+    for (const k of ['none', 'bonf', 'bh']) {
+      out[`multiple.${k}_fwer_${tag}`] = prop(Math.round(r.res[k].fwer * n), n);
+      out[`multiple.${k}_fdr_${tag}`] = { value: r.res[k].fdr, n };
+    }
+  }
+}
+
 console.log(JSON.stringify(out, null, 1));

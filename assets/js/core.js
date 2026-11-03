@@ -455,9 +455,9 @@
     o = o || {};
     const g = c.g;
     if (o.grid !== false) {
-      g.append('g')
-        .attr('class', 'grid')
-        .call(d3.axisLeft(y).ticks(o.yTicks || 5).tickSize(-c.w).tickFormat(''));
+      const ga = d3.axisLeft(y).ticks(o.yTicks || 5).tickSize(-c.w).tickFormat('');
+      if (o.yValues) ga.tickValues(o.yValues);
+      g.append('g').attr('class', 'grid').call(ga);
     }
     const xa = d3.axisBottom(x).ticks(o.xTicks || Math.max(3, Math.floor(c.w / 70)));
     if (o.xFmt) xa.tickFormat(o.xFmt);
@@ -466,6 +466,7 @@
     if (o.y !== false) {
       const ya = d3.axisLeft(y).ticks(o.yTicks || 5);
       if (o.yFmt) ya.tickFormat(o.yFmt);
+      if (o.yValues) ya.tickValues(o.yValues);
       g.append('g').attr('class', 'axis').call(ya);
     }
     if (o.xTitle)

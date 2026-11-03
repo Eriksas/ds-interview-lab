@@ -1,0 +1,154 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>假设检验与功效 · DS 面试实验室</title>
+<meta name="description" content="拖动效应量、样本量和 α，看功效怎么变；p 值是什么、不是什么；样本量计算器。">
+<script>try{var t=localStorage.getItem('dsil.theme');t=t&&JSON.parse(t);if(t==='light'||t==='dark')document.documentElement.setAttribute('data-theme',t)}catch(e){}</script>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.css">
+<link rel="stylesheet" href="../assets/css/site.css">
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.9.0/d3.min.js"></script>
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.js"></script>
+<script defer src="../assets/js/core.js"></script>
+<script defer src="../assets/js/registry.js"></script>
+<script defer src="../assets/js/quiz.js"></script>
+<script defer src="../assets/js/pages/power.js"></script>
+</head>
+<body data-page="power">
+<main>
+  <h1>假设检验与功效</h1>
+  <p class="subtitle">AB 实验 · 面试频率高 · 约 25 分钟</p>
+
+  <section class="card intuition">
+    <h2><span class="num">1</span>一句话直觉</h2>
+    <p>先假定“策略没效果”，再看手上的差异在这个假定下有多罕见；罕见到一定程度，就推翻这个假定。</p>
+    <p>功效是“策略真的有效时，我们能测出来”的概率：效应越大、样本越多、噪声越小，越容易测出来。</p>
+  </section>
+
+  <section class="card lab">
+    <h2><span class="num">2</span>交互实验</h2>
+
+    <h3>实验 1：H₀ 和 H₁ 两个分布</h3>
+    <p class="note">横轴是检验统计量 Z = 两组差 ÷ 标准误。没效果时（H₀）它围着 0 转；真有提升 Δ 时（H₁）它围着 λ = Δ/SE 转。超过临界值就判“显著”。</p>
+    <div id="c1"></div>
+    <div class="chart" id="ch1"></div>
+    <div id="lg1"></div>
+    <div class="readout" id="r1"></div>
+    <div class="chart" id="ch1b"></div>
+    <div class="btnrow">
+      <button class="btn" id="b1-reset" type="button">重置</button>
+      <button class="btn" id="b1-x5" type="button">代入 X5 项目参数</button>
+    </div>
+    <div class="tasks">
+      <details class="try"><summary>把每组样本量从 40,000 拖到 20,000，功效变成多少？</summary>
+        <div class="ans">约 <strong>50.6%</strong>（原来 79.7%）。样本量减半，标准误只变成原来的 √2 倍，λ 从 2.79 降到 1.97，刚好落在临界值附近，所以功效掉到一半左右。</div></details>
+      <details class="try"><summary>恢复默认后，把 α 从 0.05 拖到 0.01，功效变成多少？要回到 80%，每组大约要多少人？</summary>
+        <div class="ans">功效约 <strong>58.6%</strong>。门槛提高了，H₁ 分布越过门槛的部分变少。要回到 80%，每组约 <strong>59,940</strong> 人，是 α=0.05 时的 1.49 倍：一类错误和二类错误此消彼长，想同时压低两者只能加样本。</div></details>
+      <details class="try"><summary>把真实提升从 0.6 改到 1.2 个百分点，再把样本量往小拖，功效约 80% 时每组要多少人？</summary>
+        <div class="ans">约 <strong>1.03 万</strong>，大约是原来（4.03 万）的 1/4。样本量和 Δ² 成反比：效应翻倍，样本量变成四分之一；反过来，想测出一半大小的效应，要 4 倍样本。</div></details>
+    </div>
+
+    <h3>实验 2：p 值是什么</h3>
+    <p class="note">p 值 = 假设 H₀ 为真时，得到“和这次一样或更极端”结果的概率，也就是下图两侧蓝色尾巴的面积。</p>
+    <div id="c2a"></div>
+    <div class="chart" id="ch2a"></div>
+    <div class="readout" id="r2a"></div>
+
+    <h3>实验 3：p 值不是什么 <span class="tag-sim">模拟</span></h3>
+    <p class="note">模拟 2,000 个实验：比例 π 的想法真的有效（功效约 80%），其余无效。看看 p&lt;0.05 的实验里有多少其实无效。</p>
+    <div id="c2b"></div>
+    <div class="chart" id="ch2b"></div>
+    <div id="lg2"></div>
+    <div class="readout" id="r2b"></div>
+    <div class="btnrow">
+      <button class="btn primary" id="b2-again" type="button">再模拟一次</button>
+      <button class="btn" id="b2-reset" type="button">重置</button>
+    </div>
+    <div class="tasks">
+      <details class="try"><summary>把观测值拖到 1.96，p 值是多少？拖到 2.5 呢？</summary>
+        <div class="ans">1.96 对应 p = <strong>0.050</strong>，2.5 对应 p ≈ <strong>0.012</strong>。z 越大，尾巴越小，p 值越小。</div></details>
+      <details class="try"><summary>把“真正有效的想法占比”拖到 0（相当于全是 A/A 实验），直方图长什么样？</summary>
+        <div class="ans">大致是平的：H₀ 为真时，p 值在 0 到 1 之间<strong>均匀分布</strong>，每格约 100 个，落在 p&lt;0.05 的约 5%，而且全是假阳性。这正是 α 的含义。</div></details>
+      <details class="try"><summary>有效想法只占 10% 时，显著结果里其实无效的占多少？</summary>
+        <div class="ans">理论值约 <strong>36%</strong>（π=20% 时约 20%，π=50% 时约 6%）。同样是 p&lt;0.05，“结论有多可靠”取决于本来有多少想法是有效的，所以不能把 p 值读成“H₀ 为真的概率”。</div></details>
+    </div>
+
+    <h3>实验 4：样本量计算器</h3>
+    <div id="c3"></div>
+    <div class="readout" id="r3"></div>
+    <p class="note" id="adv3"></p>
+    <div class="formula"><div class="texd" id="f3"></div></div>
+    <div class="chart" id="ch3"></div>
+    <div class="btnrow"><button class="btn" id="b3-reset" type="button">重置</button></div>
+    <div class="tasks">
+      <details class="try"><summary>默认参数（基线 10%、相对 MDE 5%、每天 2 万人）每组要多少人？跑几天？</summary>
+        <div class="ans">每组 <strong>57,760</strong> 人，两组 115,520 人，约 <strong>6 天</strong>。建议跑满 7 天，覆盖完整一周。</div></details>
+      <details class="try"><summary>把相对 MDE 从 5% 改成 10%，样本量变成多少？</summary>
+        <div class="ans">每组 <strong>14,749</strong> 人，约为原来的 1/4，和实验 1 的结论一致。</div></details>
+      <details class="try"><summary>把基线转化率改成 2%（相对 MDE 仍是 5%），样本量怎么变？</summary>
+        <div class="ans">每组 <strong>315,204</strong> 人，是基线 10% 时的约 5.5 倍。基线越低，同样的相对提升对应的绝对差越小，越难测出来。</div></details>
+    </div>
+  </section>
+
+  <section class="card formulas">
+    <h2><span class="num">3</span>关键公式</h2>
+    <div class="formula">
+      <div class="texd">\mathrm{SE}=\sqrt{\frac{p_0(1-p_0)}{n}+\frac{p_1(1-p_1)}{n}}</div>
+      <p class="plain">两组转化率之差的标准误（standard error，估计值的波动大小）。样本量变 4 倍，SE 减半。</p>
+    </div>
+    <div class="formula">
+      <div class="texd">Z=\frac{\hat p_1-\hat p_0}{\mathrm{SE}},\qquad H_1\ \text{下}\ Z\ \text{的中心}\ \lambda=\frac{\Delta}{\mathrm{SE}}</div>
+      <p class="plain">H₁ 分布离 0 有多远，由“效应 ÷ 噪声”决定，样本越大离得越远。</p>
+    </div>
+    <div class="formula">
+      <div class="texd">1-\beta\approx\Phi\!\left(\lambda-z_{1-\alpha/2}\right)</div>
+      <p class="plain">功效看 λ 比临界值多出多少；λ 正好等于临界值时，功效约 50%。</p>
+    </div>
+    <div class="formula">
+      <div class="texd">n=\frac{(z_{1-\alpha/2}+z_{1-\beta})^2\,[\,p_0(1-p_0)+p_1(1-p_1)\,]}{\Delta^2}</div>
+      <div class="texd">n\approx\frac{16\,\sigma^2}{\Delta^2}\quad(\alpha=0.05\ \text{双侧，功效}\ 80\%)</div>
+      <p class="plain">每组样本量。α=0.05 双侧、功效 80% 时 (1.96+0.84)²×2 ≈ 15.7，所以有“16 倍方差除以效应平方”的速算法。</p>
+    </div>
+    <div class="formula">
+      <div class="texd">p=P\big(|Z|\ge|z_{\text{obs}}|\;\big|\;H_0\big)=2\,[\,1-\Phi(|z_{\text{obs}}|)\,]</div>
+      <p class="plain">p 值是在 H₀ 为真的前提下算的条件概率：P(数据这么极端 | H₀)，不是 P(H₀ | 数据)。</p>
+    </div>
+  </section>
+
+  <section class="card pitch">
+    <h2><span class="num">4</span>面试口述版（30 秒）</h2>
+    <blockquote>假设检验先假设策略没效果，算出观测差异在这个假设下出现的概率，也就是 p 值，小于 α 就拒绝原假设。α 是“没效果却判有效”的概率，β 是“有效却没测出来”的概率，功效是 1−β。功效由效应大小、样本量、方差和 α 决定：检验统计量在 H₁ 下的中心是 Δ/SE，样本量变 4 倍，能检测的效应减半。实验前我会用 n=(z_{α/2}+z_β)²·2σ²/Δ² 算每组样本量，α=0.05、功效 80% 时大约是 16σ²/Δ²，再除以每天流量得到天数，并且至少跑满一个完整周。</blockquote>
+  </section>
+
+  <section class="card myths">
+    <h2><span class="num">5</span>常见误区</h2>
+    <ul>
+      <li><span class="wrong">✗ “p=0.03 表示原假设为真的概率是 3%”或“结果有 3% 的可能是偶然的”。</span><br><span class="right">✓</span> p 值是“假设没效果时，看到这么极端数据的概率”。显著结果里有多少是假的，还取决于本来有多少想法有效（实验 3）。</li>
+      <li><span class="wrong">✗ “α=0.05 表示结论有 5% 的可能是错的”。</span><br><span class="right">✓</span> α 是“如果策略其实没效果，被误判为显著的概率”，是在 H₀ 成立时的条件概率。</li>
+      <li><span class="wrong">✗ “p 值很大，说明策略没效果”。</span><br><span class="right">✓</span> 只能说没有足够证据。要看置信区间：区间很宽，说明效应可能不小，只是样本不够。</li>
+      <li><span class="wrong">✗ “H₁ 分布的中心是 Cohen's d（均值差 ÷ 标准差）”。</span><br><span class="right">✓</span> 是均值差 ÷ <strong>标准误</strong>，即 λ=Δ/SE，随样本量增大而远离 0，所以样本越大功效越高。Cohen's d 和样本量无关。</li>
+      <li><span class="wrong">✗ 说“MDE 是 5%”却不说清相对还是绝对。</span><br><span class="right">✓</span> 基线 10% 时，相对 5% 是 0.5 个百分点（每组约 5.8 万人）；绝对 5 个百分点是 10%→15%（每组约 700 人），样本量差约 85 倍。</li>
+      <li><span class="wrong">✗ 实验不显著后，算“事后功效”（observed power）来证明样本不够。</span><br><span class="right">✓</span> 用观测效应算出的事后功效只是 p 值换了个写法，不显著时它必然偏低，没有新信息。应该看置信区间，或者看在当前样本量下能检测的 MDE 是多少。</li>
+      <li><span class="wrong">✗ 算出 6 天就只跑 6 天，或者一直延长到显著为止。</span><br><span class="right">✓</span> 至少覆盖一个完整周期（7 天）；样本量事先定好，中途反复看结果会推高假阳性（见下一页）。</li>
+    </ul>
+  </section>
+
+  <section class="card quiz">
+    <h2><span class="num">6</span>自测题</h2>
+    <div id="quiz-list"></div>
+  </section>
+
+  <section class="card project">
+    <h2><span class="num">7</span>和 X5 项目的联系</h2>
+    <p>X5 短信实验（<a href="https://github.com/Eriksas/retail-uplift-ab" target="_blank" rel="noopener">retail-uplift-ab</a>）每组约 10 万人，对照组购买率 60.33%。</p>
+    <ul>
+      <li>按 α=0.05 双侧、功效 80%，这个样本量能检测的最小效应约 <strong>0.61 个百分点</strong>（= 2.80 × 标准误 0.217 个百分点）。</li>
+      <li>实际 ATE 是 <strong>3.32 个百分点</strong>，95% 置信区间 [2.90, 3.75]，远大于 MDE：λ ≈ 15.3，功效几乎 100%，所以 p 值极小。点上面“代入 X5 项目参数”能看到 H₀ 和 H₁ 分得多开。</li>
+      <li>面试可以这样说：这个实验样本充足，主要风险不在功效，而在随机化是否成功（样本比例检验 p=0.863，14 个协变量 |SMD| 最大 0.0085）和指标口径。</li>
+    </ul>
+    <p class="note">数字来自项目的 <code>results/stage1_ab_test.json</code>。</p>
+  </section>
+</main>
+</body>
+</html>

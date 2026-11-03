@@ -61,5 +61,11 @@ pitfalls.winner_ratio_theory            公式       1.61030     1.61030    0.00
 pitfalls.winner_power                   公式       0.37790     0.37790    0.00000    0.00001  通过
 pitfalls.winner_ratio_sim_big           模拟       1.60894     1.61235    0.00341    0.00513  通过
 pitfalls.novelty_7d_avg                 公式       0.00755     0.00755    0.00000    0.00000  通过
+decomp.total                            公式      -0.00215    -0.00215    0.00000    0.00000  通过
+decomp.mix_sym                          公式      -0.00157    -0.00157    0.00000    0.00000  通过
+decomp.rate_sym                         公式      -0.00058    -0.00058    0.00000    0.00000  通过
+decomp.mix_film_sym                     公式      -0.00082    -0.00082    0.00000    0.00000  通过
+decomp.inter_base                       公式      -0.00037    -0.00037    0.00000    0.00000  通过
+decomp.all_up_total                     公式      -0.00023    -0.00023    0.00000    0.00000  通过
 
-共 59 项，通过 59 项
+共 65 项，通过 65 项

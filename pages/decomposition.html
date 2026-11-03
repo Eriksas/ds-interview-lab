@@ -1,0 +1,98 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>指标异动拆解 · DS 面试实验室</title>
+<meta name="description" content="把总指标变化拆成结构变化和各自比率变化；视频平台指标树。">
+<script>try{var t=localStorage.getItem('dsil.theme');t=t&&JSON.parse(t);if(t==='light'||t==='dark')document.documentElement.setAttribute('data-theme',t)}catch(e){}</script>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.css">
+<link rel="stylesheet" href="../assets/css/site.css">
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.9.0/d3.min.js"></script>
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.js"></script>
+<script defer src="../assets/js/core.js"></script>
+<script defer src="../assets/js/registry.js"></script>
+<script defer src="../assets/js/quiz.js"></script>
+<script defer src="../assets/js/pages/decomposition.js"></script>
+</head>
+<body data-page="decomposition">
+<main>
+  <h1>指标异动拆解</h1>
+  <p class="subtitle">指标与业务 · 面试频率高 · 约 25 分钟</p>
+
+  <section class="card intuition">
+    <h2><span class="num">1</span>一句话直觉</h2>
+    <p>总转化率 = 各部分转化率按人数占比的加权平均。它变了，要么是“人群结构变了”（低转化的部分变多），要么是“各自的转化率变了”，先分清是哪一种，再去找原因。</p>
+  </section>
+
+  <section class="card lab">
+    <h2><span class="num">2</span>交互实验</h2>
+    <h3>实验 1：拆开总付费转化率 <span class="tag-sim">模拟</span></h3>
+    <p class="note">场景：视频平台三类版权内容的观看用户数和付费转化率（观看用户里开通会员的比例）。默认情况是一部免费的爆款剧把很多付费意愿低的用户带进了“影视”。先选“基期 / 当期”，再拖动滑块。</p>
+    <div id="c1"></div>
+    <div class="tbl-wrap" id="t1"></div>
+    <div class="readout" id="r1"></div>
+    <div class="chart" id="ch1"></div>
+    <div id="lg1"></div>
+    <p class="callout" id="sum1"></p>
+    <div class="btnrow"><button class="btn" id="b1-reset" type="button">重置</button></div>
+    <div class="tasks">
+      <details class="try"><summary>默认场景：总转化率降了多少？主要是结构还是比率？</summary>
+        <div class="ans">从 3.60% 降到 3.38%，少了 <strong>0.215</strong> 个百分点。对称拆分下，结构变化贡献 <strong>−0.157</strong>，各自比率变化只贡献 −0.059。主要原因是观看人群里低转化的“影视”占比从 40% 升到 54%，而不是哪类内容的转化率大跌。</div></details>
+      <details class="try"><summary>在“当期”把影视观看用户拖回 40 万，总变化是多少？</summary>
+        <div class="ans">只剩 <strong>−0.040</strong> 个百分点，全部来自比率变化（影视 −0.08、纪录片 +0.04），结构贡献为 0。</div></details>
+      <details class="try"><summary>能不能让三类内容的转化率<strong>都上升</strong>，总转化率却<strong>下降</strong>？</summary>
+        <div class="ans">能。当期设成番剧 5.1%、影视 3.1%、纪录片 2.2%，影视仍是 70 万：每类都涨了，总转化率却从 3.60% 降到 3.58%（−0.023 个百分点）。比率贡献 +0.118，被结构变化 −0.141 抵消还多。这就是异动分析里的辛普森悖论。</div></details>
+    </div>
+
+    <h3>实验 2：视频平台的指标树（点击展开）</h3>
+    <p class="note">异动分析时沿着树往下拆：乘法关系看哪个因子变了，加法关系看哪一块变了。每个节点下面写了“异动时先看什么”。</p>
+    <div class="btnrow">
+      <button class="btn small" id="b-open" type="button">全部展开</button>
+      <button class="btn small" id="b-close" type="button">全部收起</button>
+    </div>
+    <div class="tree" id="tree"></div>
+  </section>
+
+  <section class="card formulas">
+    <h2><span class="num">3</span>关键公式</h2>
+    <div class="formula">
+      <div class="texd">R=\sum_i w_i\,r_i,\qquad w_i=\frac{n_i}{\sum_j n_j}</div>
+      <p class="plain">总转化率是各部分转化率 r 按人数占比 w 的加权平均。</p>
+    </div>
+    <div class="formula">
+      <div class="texd">\Delta R=\underbrace{\sum_i \Delta w_i\,(\bar r_i-\bar R)}_{\text{结构变化}}+\underbrace{\sum_i \bar w_i\,\Delta r_i}_{\text{各自比率变化}}</div>
+      <p class="plain">对称拆分：r̄、w̄ 取基期和当期的平均，两部分加起来正好等于总变化，没有交互项。减去 R̄ 不改变合计，但让单个部分的结构贡献更好解释：低于平均水平的部分变大，才会拉低总数。</p>
+    </div>
+    <div class="formula">
+      <div class="texd">\Delta R=\sum_i \Delta w_i\,r_{1,i}+\sum_i w_{1,i}\,\Delta r_i+\sum_i \Delta w_i\,\Delta r_i</div>
+      <p class="plain">另一种常见写法：用基期做权重，多出一个“交互项”。两种写法合计相同，只是交互项分给谁的约定不同。</p>
+    </div>
+    <div class="formula">
+      <div class="texd">\mathrm{GMV}=\mathrm{UV}\times\mathrm{CR}\times\mathrm{AOV}\;\Rightarrow\;\Delta\ln\mathrm{GMV}=\Delta\ln\mathrm{UV}+\Delta\ln\mathrm{CR}+\Delta\ln\mathrm{AOV}</div>
+      <p class="plain">乘法型指标取对数变成加法，各因子的对数变化之比就是贡献占比；不受“先替换哪个因子”的顺序影响（连环替代法会受顺序影响）。</p>
+    </div>
+  </section>
+
+  <section class="card pitch">
+    <h2><span class="num">4</span>面试口述版（30 秒）</h2>
+    <blockquote>指标异动我分四步。第一，先确认数据本身：口径有没有改、埋点和数据延迟有没有问题。第二，看时间：是突然跳变还是缓慢下滑，同比环比，是否节假日或活动。第三，按维度拆：比率指标拆成“结构变化”和“各自比率变化”，比如总付费转化率下降，可能只是低转化内容的观看占比变大了，各类内容的转化率并没有变；乘法指标用对数拆分算各因子的贡献。第四，结合内外部因素找原因：版本发布、策略改动、内容上线、竞品和热点，最后给出结论和建议，能验证的用实验验证。</blockquote>
+  </section>
+
+  <section class="card myths">
+    <h2><span class="num">5</span>常见误区</h2>
+    <ul>
+      <li><span class="wrong">✗ “总转化率下降，说明某类内容的转化出了问题”。</span><br><span class="right">✓</span> 可能每类都没变甚至都上升了，只是低转化的部分占比变大（实验 1 第 3 题）。先拆结构和比率。</li>
+      <li><span class="wrong">✗ 一上来就按维度下钻。</span><br><span class="right">✓</span> 先排除数据问题：口径变更、埋点丢失、数据延迟、统计脚本改动，很多“异动”是数据问题。</li>
+      <li><span class="wrong">✗ 加法指标和乘法指标用一样的拆法。</span><br><span class="right">✓</span> 加法（总量 = 各部分之和）直接看各部分的差值；比率看结构 + 比率；乘法用对数拆分，避免连环替代法的顺序问题。</li>
+      <li><span class="wrong">✗ “结构贡献是负的，所以是这个渠道导致下降”。</span><br><span class="right">✓</span> 拆解是会计恒等式，只说明“数字上来自哪里”，不说明“为什么”。影视占比变大是现象，原因（免费爆款、推荐策略改了）要靠业务信息和实验验证。拆解结果是相关，不是因果。</li>
+    </ul>
+  </section>
+
+  <section class="card quiz">
+    <h2><span class="num">6</span>自测题</h2>
+    <div id="quiz-list"></div>
+  </section>
+</main>
+</body>
+</html>

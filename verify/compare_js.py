@@ -142,6 +142,18 @@ js["pitfalls.winner_ratio_sim_big"]["se"] = float(est[sig].std(ddof=1) / np.sqrt
 mc("pitfalls.winner_ratio_sim_big", wb["sim_ratio"], float(est[sig].std(ddof=1) / np.sqrt(sig.sum()) / 0.005))
 det("pitfalls.novelty_7d_avg", m5.novelty_curve(7, long=0.002, nov=0.01).mean())
 
+
+# ---------- 页面 6 ----------
+m6 = importlib.import_module("06_decomposition")
+d = m6.decompose(m6.BASE, m6.CUR)
+det("decomp.total", d["R2"] - d["R1"], tol=1e-12)
+det("decomp.mix_sym", d["mix"].sum(), tol=1e-12)
+det("decomp.rate_sym", d["rate"].sum(), tol=1e-12)
+det("decomp.mix_film_sym", d["mix"][1], tol=1e-12)
+det("decomp.inter_base", d["inter_b"].sum(), tol=1e-12)
+d2 = m6.decompose(m6.BASE, dict(n=[40, 70, 20], r=[0.051, 0.031, 0.022]))
+det("decomp.all_up_total", d2["R2"] - d2["R1"], tol=1e-12)
+
 # ---------- 输出 ----------
 print("浏览器模拟（Node 运行同一份 JS）vs Python（numpy）对照")
 print("公式类：差异 ≤ 容差；模拟类：差异 ≤ 3 × 合并蒙特卡洛标准误\n")

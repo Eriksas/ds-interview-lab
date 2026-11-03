@@ -31,7 +31,7 @@
       desc: '带宽选择、凑单让 RDD 失效；鼓励设计里的依从者和 Wald 估计（LATE）。' },
     { id: 'uplift', title: '增益模型 Uplift', group: 'causal', freq: 2, minutes: 30, ready: false, verify: '13_uplift',
       desc: '四类人群、S / T / X-Learner、X-Learner 权重方向、Qini 曲线；联系 X5 项目。' },
-    { id: 'decomposition', title: '指标异动拆解', group: 'metric', freq: 3, minutes: 25, ready: false, verify: '06_decomposition',
+    { id: 'decomposition', title: '指标异动拆解', group: 'metric', freq: 3, minutes: 25, ready: true, verify: '06_decomposition',
       desc: '把总指标变化拆成“结构变化”和“各自比率变化”；视频平台指标树。' },
     { id: 'recsys', title: '推荐链路与排序指标', group: 'rec', freq: 2, minutes: 30, ready: false, verify: '07_recsys',
       desc: '召回 → 粗排 → 精排 → 重排；拖动列表算 P@K、R@K、NDCG、AUC 和 GAUC。' },

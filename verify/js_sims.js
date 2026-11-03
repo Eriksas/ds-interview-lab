@@ -108,4 +108,19 @@ if (Lab.sim.pitfalls) {
   out['pitfalls.novelty_7d_avg'] = { value: Lab.stats.mean(nv) };
 }
 
+
+/* ---------- 页面 6：指标异动拆解 ---------- */
+if (Lab.sim.decomposition) {
+  const D = Lab.sim.decomposition;
+  const d = D.decompose(D.BASE, D.CUR);
+  const s = (a) => a.reduce((x, y) => x + y, 0);
+  out['decomp.total'] = { value: d.R2 - d.R1 };
+  out['decomp.mix_sym'] = { value: s(d.mix) };
+  out['decomp.rate_sym'] = { value: s(d.rate) };
+  out['decomp.mix_film_sym'] = { value: d.mix[1] };
+  out['decomp.inter_base'] = { value: s(d.interB) };
+  const d2 = D.decompose(D.BASE, { n: [40, 70, 20], r: [0.051, 0.031, 0.022] });
+  out['decomp.all_up_total'] = { value: d2.R2 - d2.R1 };
+}
+
 console.log(JSON.stringify(out, null, 1));

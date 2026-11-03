@@ -1,0 +1,142 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>增益模型 Uplift · DS 面试实验室</title>
+<meta name="description" content="四类人群、S / T / X-Learner 与 X-Learner 的权重方向、Qini 曲线；联系 X5 短信项目。">
+<script>try{var t=localStorage.getItem('dsil.theme');t=t&&JSON.parse(t);if(t==='light'||t==='dark')document.documentElement.setAttribute('data-theme',t)}catch(e){}</script>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.css">
+<link rel="stylesheet" href="../assets/css/site.css">
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.9.0/d3.min.js"></script>
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.js"></script>
+<script defer src="../assets/js/core.js"></script>
+<script defer src="../assets/js/registry.js"></script>
+<script defer src="../assets/js/quiz.js"></script>
+<script defer src="../assets/js/pages/uplift.js"></script>
+</head>
+<body data-page="uplift">
+<main>
+  <h1>增益模型 Uplift</h1>
+  <p class="subtitle">因果推断 · 面试频率中 · 约 30 分钟</p>
+
+  <section class="card intuition">
+    <h2><span class="num">1</span>一句话直觉</h2>
+    <p>响应模型找“会买的人”，增益模型找“因为发了才买的人”。不发也会买的人，发了是浪费；发了反而不买的人，要避开。</p>
+  </section>
+
+  <section class="card lab">
+    <h2><span class="num">2</span>交互实验</h2>
+
+    <h3>实验 1：四类人群</h3>
+    <p class="note">按“发了会不会买”和“不发会不会买”把人分成四类。这是反事实的分法：每个人只能观察到其中一种情况，所以个人属于哪一类永远看不到，只能从随机实验的群体数据里估计。下面假设我们知道每类的占比。</p>
+    <div id="c1"></div>
+    <div class="ug" id="grid1"></div>
+    <div class="chart" id="ch1"></div>
+    <div class="readout" id="r1"></div>
+    <div class="btnrow"><button class="btn" id="b1-reset" type="button">重置</button></div>
+    <div class="tasks">
+      <details class="try"><summary>默认（说服型 10%、确定型 40%、反感型 5%），预算 20%：三种选人方式每发 1,000 人分别多带来多少购买？</summary>
+        <div class="ans">随机发 <strong>50</strong>，按购买概率（响应模型）<strong>200</strong>，按增益 <strong>500</strong>。响应模型挑出来的是“发了会买”的人，其中确定型是说服型的 4 倍，大部分短信浪费在了不发也会买的人身上。</div></details>
+      <details class="try"><summary>把预算拖到 100%（全发），三种方式还有区别吗？</summary>
+        <div class="ans">没有区别，都是 50（= 说服型 10% − 反感型 5%）。选人方式只在预算有限时才重要；全发时的增量就是平均处理效应 ATE。预算越小，排序越重要。</div></details>
+    </div>
+
+    <h3>实验 2：S / T / X-Learner，以及 X-Learner 的权重方向 <span class="tag-sim">模拟</span></h3>
+    <p class="note">1,000 个用户，结果 = 复杂的基础水平 μ₀(x) + 简单的增益 τ(x) = 0.5 + x。第一阶段用 20 个分箱的分箱均值（灵活但需要数据），X-Learner 第二阶段用直线。处理组越少，处理组的模型越难估准。</p>
+    <div id="c2"></div>
+    <div class="chart" id="ch2"></div>
+    <div id="lg2"></div>
+    <p class="note" id="cap2"></p>
+    <div class="chart" id="ch3"></div>
+    <div class="btnrow">
+      <button class="btn primary" id="b2-again" type="button">再模拟一次</button>
+      <button class="btn" id="b2-reset" type="button">重置</button>
+    </div>
+    <div class="tasks">
+      <details class="try"><summary>处理组占 5%：T-Learner 和 X-Learner（正确权重）的误差各是多少？</summary>
+        <div class="ans">T-Learner 约 <strong>0.80</strong>，X-Learner 约 <strong>0.20</strong>（verify 重复 300 次）。T-Learner 用 50 个处理组样本去估复杂的 μ₁，误差直接进入增益；X-Learner 借对照组估得很准的 μ₀ 构造增益，再用简单的直线去拟合简单的 τ。</div></details>
+      <details class="try"><summary>同样 5%，把权重反过来（给 τ̂₀ 95%）会怎样？处理组 3% 呢？</summary>
+        <div class="ans">5% 时误差从 0.20 升到 <strong>0.24</strong>；3% 时从 0.24 升到 <strong>0.33</strong>。τ̂₀ 要用到处理组模型 μ̂₁，处理组少时 μ̂₁ 不准，所以这时应该更信任 τ̂₁。按原论文，权重 g(x) 取倾向得分 e(x)，处理组少时 e 小，τ̂₁ 的权重 1−e 自然就大。</div></details>
+      <details class="try"><summary>把处理组占比拖到 50%，两种权重还有区别吗？S-Learner 表现如何？</summary>
+        <div class="ans">没有区别（都约 0.08）：两组一样大时 g=0.5，正反权重一样。S-Learner 无论如何都约 0.3：这里的加性模型只能估出一个常数效应，把“不同人增益不同”压平了，这是 S-Learner 常见的问题（处理变量在树模型里也容易被忽略）。</div></details>
+    </div>
+
+    <h3>实验 3：Qini 曲线 <span class="tag-sim">模拟</span></h3>
+    <p class="note">1 万人的随机实验数据。不活跃的人不发短信很少买，但更容易被说服；活跃的人不发也常买，几乎不受影响。拖动“噪声”改变增益模型的好坏。</p>
+    <div id="c3"></div>
+    <div class="chart" id="ch4"></div>
+    <div id="lg3"></div>
+    <div class="readout" id="r3"></div>
+    <div class="btnrow">
+      <button class="btn primary" id="b3-again" type="button">再模拟一次</button>
+      <button class="btn" id="b3-reset" type="button">重置</button>
+    </div>
+    <div class="tasks">
+      <details class="try"><summary>为什么响应模型的曲线在随机线下面，Qini 系数是负的？</summary>
+        <div class="ans">响应模型按“发了以后买的概率”排序，先挑中的是活跃用户，他们不发也会买，增益最小，所以前面几乎没有增量，比随机还差（verify 中 Qini 系数 −0.028，前 30% 拿到的增量是负的）。这和 X5 项目里响应模型 Qini −0.0052 是同一个现象。</div></details>
+      <details class="try"><summary>把噪声拖到 0，再拖到 3，Qini 系数和“前 30% 拿到的增量”怎么变？</summary>
+        <div class="ans">噪声 0（按真实增益排序）：Qini 约 0.029，前 30% 拿到约 53% 的增量；噪声 3：Qini 约 0.007，前 30% 约 45%（verify）。模型越准，曲线越往左上鼓。注意 Qini 系数的分母是“理想排序”，在真实数据里它非常大，所以这个数天然很小，要和随机（0）、响应模型对比着看。</div></details>
+    </div>
+  </section>
+
+  <section class="card formulas">
+    <h2><span class="num">3</span>关键公式</h2>
+    <div class="formula">
+      <div class="texd">\tau(x)=E\big[Y(1)-Y(0)\mid X=x\big]</div>
+      <p class="plain">增益就是条件平均处理效应 CATE：特征为 x 的人，发和不发的购买概率之差。</p>
+    </div>
+    <div class="formula">
+      <div class="texd">\text{S：}\ \hat\tau(x)=\hat\mu(x,1)-\hat\mu(x,0)\qquad \text{T：}\ \hat\tau(x)=\hat\mu_1(x)-\hat\mu_0(x)</div>
+      <p class="plain">S-Learner 一个模型、把“是否处理”当一个特征；T-Learner 两组各训练一个模型再相减，两个模型的误差会叠加。</p>
+    </div>
+    <div class="formula">
+      <div class="texd">D^1_i=Y^1_i-\hat\mu_0(X^1_i),\qquad D^0_i=\hat\mu_1(X^0_i)-Y^0_i</div>
+      <p class="plain">X-Learner 第二步：给处理组每个人估算增益（用对照组模型 μ̂₀ 补反事实），给对照组每个人也估算（用 μ̂₁）；分别对 D¹、D⁰ 建模得到 τ̂₁、τ̂₀。</p>
+    </div>
+    <div class="formula">
+      <div class="texd">\hat\tau(x)=g(x)\,\hat\tau_0(x)+\big(1-g(x)\big)\,\hat\tau_1(x),\qquad g(x)=\hat e(x)</div>
+      <p class="plain">权重 g 通常取倾向得分 e(x)（进处理组的概率）。处理组少 → e 小 → 更信任 τ̂₁。</p>
+    </div>
+    <div class="formula">
+      <div class="texd">Q(k)=Y_T(k)-Y_C(k)\cdot\frac{N_T(k)}{N_C(k)}</div>
+      <p class="plain">Qini 曲线：前 k 个人里，实验组的购买人数减去按人数折算的对照组购买人数，即“多带来的购买”。Qini 系数 = 曲线与随机线之间的面积 ÷ 理想排序与随机线之间的面积。</p>
+    </div>
+  </section>
+
+  <section class="card pitch">
+    <h2><span class="num">4</span>面试口述版（30 秒）</h2>
+    <blockquote>增益模型估计的是“发与不发”的差，也就是条件平均处理效应，用来找说服型的人，避开不发也会买的确定型和发了反而不买的反感型。常见方法有三种：S-Learner 一个模型把处理变量当特征，容易把增益压平；T-Learner 两组各建模再相减，误差会叠加；X-Learner 先用对方组的模型给每个人补一个估算增益，再对增益建模，最后按倾向得分加权，处理组少的时候更信任用处理组样本构造的那个增益模型。评估要用随机实验数据，看 Qini 曲线、Qini 系数和分组的实际增益，而不是 AUC。没有哪种方法永远最好，要在验证集上比较。</blockquote>
+  </section>
+
+  <section class="card myths">
+    <h2><span class="num">5</span>常见误区</h2>
+    <ul>
+      <li><span class="wrong">✗ “用购买概率模型挑出最可能买的人发券，效果最好”。</span><br><span class="right">✓</span> 最可能买的人多半不发也会买，增量很低，甚至比随机还差（实验 1、3）。</li>
+      <li><span class="wrong">✗ “X-Learner 里处理组少时，应该更信任 τ̂₀”。</span><br><span class="right">✓</span> 反了。τ̂₀ 依赖处理组模型 μ̂₁，处理组少时它不准；应该更信任 τ̂₁（用处理组样本、借对照组模型 μ̂₀ 构造的）。按原论文 g = e(x)，处理组少时 e 小，τ̂₁ 的权重大。</li>
+      <li><span class="wrong">✗ “X-Learner 是工业界最优方法”。</span><br><span class="right">✓</span> 没有永远最好的 learner，取决于样本量、处理组比例、基础模型和增益信号强弱；要在验证集上比较。</li>
+      <li><span class="wrong">✗ “可以看出每个用户属于四类中的哪一类”。</span><br><span class="right">✓</span> 个人的反事实看不到。实践中按模型预测分群，再在群体层面用随机实验数据检验每群的实际增益。</li>
+      <li><span class="wrong">✗ 用 AUC、准确率评估增益模型。</span><br><span class="right">✓</span> 没有个人增益的真值，只能用随机实验数据按排序看群体增益：Qini / 增益曲线、Qini 系数、分组实际增益。</li>
+    </ul>
+  </section>
+
+  <section class="card quiz">
+    <h2><span class="num">6</span>自测题</h2>
+    <div id="quiz-list"></div>
+  </section>
+
+  <section class="card project">
+    <h2><span class="num">7</span>和 X5 项目的联系</h2>
+    <p><a href="https://github.com/Eriksas/retail-uplift-ab" target="_blank" rel="noopener">retail-uplift-ab</a> 手写了 S / T / X-Learner 和类别转换法，在验证集上比较 12 个候选模型，测试集只评估一次。</p>
+    <ul>
+      <li><strong>没有哪种 learner 永远最好</strong>：最终选的是逻辑回归 T-Learner（测试集 Qini 系数 0.0129，bootstrap 95% 区间 [0.0068, 0.0195]）；第二名 X-Learner 和它的 Qini 差的区间是 [−0.0011, 0.0026]，差异不显著。</li>
+      <li><strong>响应模型比随机还差</strong>：普通响应模型的测试集 Qini 系数是 <strong>−0.0052</strong>。发给预测增益最高的 30% 客户，能拿到全部增量购买的 <strong>59.3%</strong>；响应模型的前 30% 只拿到 13.3%。</li>
+      <li><strong>X-Learner 的权重</strong>：项目里实验组约占 50%，g ≈ 0.5，正反两种权重几乎没有区别（实验 2 拖到 50% 时也一样）；在已知真实增益的模拟数据上，X-Learner 与真实增益的相关系数 0.534，高于 T-Learner 的 0.437，T-Learner 预测增益的波动是真实的 2.6 倍。</li>
+      <li><strong>四类人群（按预测分群）</strong>：“可说服的人”占 31.2%，不发短信时购买率 41.0%，实际增益 6.02 个百分点；“铁定买”占 31.2%，不发也有 83.4% 会买，增益只有 1.56 个百分点。</li>
+      <li><strong>没有发现反感型</strong>：预测增益最低的 10% 客户，实际增益仍是 +3.24 个百分点（最高的 10% 是 8.47）。</li>
+    </ul>
+    <p class="note">数字来自项目的 <code>results/stage3_summary.json</code>、<code>stage4_summary.json</code>、<code>stage4_deciles.csv</code>、<code>stage5_summary.json</code>。</p>
+  </section>
+</main>
+</body>
+</html>

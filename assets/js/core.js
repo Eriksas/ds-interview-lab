@@ -484,7 +484,8 @@
       if (o.yValues) ga.tickValues(o.yValues);
       g.append('g').attr('class', 'grid').call(ga);
     }
-    const xa = d3.axisBottom(x).ticks(o.xTicks || Math.max(3, Math.floor(c.w / 70)));
+    // 刻度数不超过宽度允许的数量，避免窄屏上标签挤在一起
+    const xa = d3.axisBottom(x).ticks(Math.max(2, Math.min(o.xTicks || 99, Math.floor(c.w / 64))));
     if (o.xFmt) xa.tickFormat(o.xFmt);
     if (o.xValues) xa.tickValues(o.xValues);
     g.append('g').attr('class', 'axis').attr('transform', `translate(0,${c.h})`).call(xa);

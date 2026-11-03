@@ -15,7 +15,11 @@ import pathlib
 import subprocess
 import sys
 
+import warnings
+
 import numpy as np
+
+warnings.filterwarnings("ignore", category=FutureWarning)
 
 HERE = pathlib.Path(__file__).resolve().parent
 sys.path.insert(0, str(HERE))
@@ -242,6 +246,29 @@ res = [m12.iv_est(*m12.iv_gen(10_000, 0.3, 0.2, 10, 15, rng12)) for _ in range(3
 w = np.array([r["wald"] for r in res]); nv = np.array([r["naive"] for r in res])
 mc("rddiv.wald_mean", w.mean(), w.std(ddof=1) / np.sqrt(300))
 mc("rddiv.naive_mean", nv.mean(), nv.std(ddof=1) / np.sqrt(300))
+
+
+# ---------- 页面 13 ----------
+m13 = importlib.import_module("13_uplift")
+from sklift.metrics import qini_auc_score  # noqa: E402
+for b in (0.1, 0.2, 0.5, 0.97):
+    _, rp, up = m13.four_groups(0.1, 0.4, 0.45, b)
+    det(f"uplift.four_b{b}_resp", rp, tol=1e-9)
+    det(f"uplift.four_b{b}_upl", up, tol=1e-9)
+i = np.arange(5000)
+x = (i + 0.5) / 5000
+t = i % 2
+base = 0.2 + 0.6 * x
+tu = 0.12 * (1 - x) - 0.01
+y = (((i * 7919) % 1000) / 1000 < base + tu * t).astype(int)
+det("uplift.qini_det_tau", qini_auc_score(y, tu, t, negative_effect=True), tol=1e-9)
+det("uplift.qini_det_resp", qini_auc_score(y, base + tu, t, negative_effect=True), tol=1e-9)
+for e in (0.05, 0.5):
+    rng13 = np.random.default_rng(SEED)
+    res = [m13.learners(1000, e, rng13) for _ in range(300)]
+    for key in ("T", "X", "Xrev"):
+        a = np.array([r[key] for r in res])
+        mc(f"uplift.rmse_e{e}_{key}", a.mean(), a.std(ddof=1) / np.sqrt(a.size))
 
 # ---------- 输出 ----------
 print("浏览器模拟（Node 运行同一份 JS）vs Python（numpy）对照")

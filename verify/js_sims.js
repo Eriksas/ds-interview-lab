@@ -221,4 +221,29 @@ if (Lab.sim.rddiv) {
   out['rddiv.naive_mean'] = { value: Lab.stats.mean(nv), se: Math.sqrt(Lab.stats.variance(nv) / 300) };
 }
 
+
+/* ---------- 页面 13：增益模型 ---------- */
+if (Lab.sim.uplift) {
+  const U = Lab.sim.uplift;
+  for (const b of [0.1, 0.2, 0.5, 0.97]) {
+    const r = U.fourGroups(0.1, 0.4, 0.45, b);
+    out[`uplift.four_b${b}_resp`] = { value: r.resp };
+    out[`uplift.four_b${b}_upl`] = { value: r.upl };
+  }
+  // 确定性数据核对 Qini 系数（与 sklift 一致）
+  const n = 5000, y = [], t = [], tau = [], resp = [];
+  for (let i = 0; i < n; i++) {
+    const x = (i + 0.5) / n, ti = i % 2, base = 0.2 + 0.6 * x, tu = 0.12 * (1 - x) - 0.01;
+    t.push(ti); tau.push(tu); resp.push(base + tu);
+    y.push(((i * 7919) % 1000) / 1000 < base + tu * ti ? 1 : 0);
+  }
+  out['uplift.qini_det_tau'] = { value: U.qiniCoef(y, tau, t) };
+  out['uplift.qini_det_resp'] = { value: U.qiniCoef(y, resp, t) };
+  for (const e of [0.05, 0.5]) {
+    const r = Lab.rng(81), acc = { T: [], X: [], Xrev: [] };
+    for (let k = 0; k < 300; k++) { const o = U.learners(1000, e, r); for (const key in acc) acc[key].push(U.rmse(o[key])); }
+    for (const key in acc) out[`uplift.rmse_e${e}_${key}`] = { value: Lab.stats.mean(acc[key]), se: Math.sqrt(Lab.stats.variance(acc[key]) / 300) };
+  }
+}
+
 console.log(JSON.stringify(out, null, 1));

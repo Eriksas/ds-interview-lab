@@ -143,4 +143,16 @@ if (Lab.sim.recsys) {
   out['recsys.funnel_ratio'] = { value: R.funnelCost(5000, 500, 1, 50).ratio };
 }
 
+
+/* ---------- 页面 8：Delta 方法 ---------- */
+if (Lab.sim.delta) {
+  const D = Lab.sim.delta;
+  for (const [tag, reps] of [['default', 400], ['big', 2000]]) {
+    const e = D.experiment(1000, 10, 0.04, reps, 49);
+    out[`delta.fpr_naive_${tag}`] = prop(Math.round(e.fprNaive * reps), reps);
+    out[`delta.fpr_delta_${tag}`] = prop(Math.round(e.fprDelta * reps), reps);
+    out[`delta.ratio_naive_true_${tag}`] = { value: e.naive / e.true, se: (e.naive / e.true) / Math.sqrt(2 * (reps - 1)), n: reps };
+  }
+}
+
 console.log(JSON.stringify(out, null, 1));

@@ -21,7 +21,7 @@
       desc: '拖动实验前后指标的相关系数，看方差变成 1−ρ²、样本量省多少。' },
     { id: 'pitfalls', title: '实验结果的陷阱', group: 'ab', freq: 3, minutes: 30, ready: true, verify: '05_pitfalls',
       desc: '只看付费用户的选择偏差、放量时的辛普森悖论、赢家诅咒、新奇效应。' },
-    { id: 'delta', title: '比率指标与 Delta 方法', group: 'ab', freq: 2, minutes: 20, ready: false, verify: '08_delta',
+    { id: 'delta', title: '比率指标与 Delta 方法', group: 'ab', freq: 2, minutes: 20, ready: true, verify: '08_delta',
       desc: '按用户分流、按曝光算指标时，朴素标准误为什么偏小；Delta 与 Bootstrap。' },
     { id: 'did', title: '双重差分 DID', group: 'causal', freq: 3, minutes: 30, ready: false, verify: '10_did',
       desc: '平行趋势被破坏时估计偏多少；事件研究图；交错上线时 TWFE 的偏误。' },

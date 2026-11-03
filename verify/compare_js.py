@@ -176,6 +176,16 @@ det("recsys.global_auc", roc_auc_score(np.concatenate(ys), np.concatenate(ss)), 
 det("recsys.A_auc_tie23", roc_auc_score(yA, m7.scores(8, A["base"], ties=(2,))), tol=1e-12)
 det("recsys.funnel_ratio", 5000 * 50 / (5000 + 500 * 50), tol=1e-12)
 
+
+# ---------- 页面 8 ----------
+m8 = importlib.import_module("08_delta")
+for tag, reps in [("default", 400), ("big", 2000)]:
+    e = m8.experiment(1000, 10, 0.04, reps, np.random.default_rng(SEED))
+    mc(f"delta.fpr_naive_{tag}", *prop(round(e["fpr_naive"] * reps), reps))
+    mc(f"delta.fpr_delta_{tag}", *prop(round(e["fpr_delta"] * reps), reps))
+    rr = e["naive"] / e["true"]
+    mc(f"delta.ratio_naive_true_{tag}", rr, rr / np.sqrt(2 * (reps - 1)))  # 标准差估计的相对误差约 1/sqrt(2(reps-1))
+
 # ---------- 输出 ----------
 print("浏览器模拟（Node 运行同一份 JS）vs Python（numpy）对照")
 print("公式类：差异 ≤ 容差；模拟类：差异 ≤ 3 × 合并蒙特卡洛标准误\n")

@@ -76,5 +76,11 @@ recsys.gauc_clk                         公式       0.70899     0.70899    0.00
 recsys.global_auc                       公式       0.79259     0.79259    0.00000    0.00000  通过
 recsys.A_auc_tie23                      公式       0.70000     0.70000    0.00000    0.00000  通过
 recsys.funnel_ratio                     公式       8.33333     8.33333    0.00000    0.00000  通过
+delta.fpr_naive_default                 模拟       0.16250     0.12250    0.04000    0.07403  通过
+delta.fpr_delta_default                 模拟       0.06250     0.05000    0.01250    0.04886  通过
+delta.ratio_naive_true_default          模拟       0.74503     0.76751    0.02248    0.11359  通过
+delta.fpr_naive_big                     模拟       0.13550     0.12550    0.01000    0.03195  通过
+delta.fpr_delta_big                     模拟       0.05800     0.05400    0.00400    0.02181  通过
+delta.ratio_naive_true_big              模拟       0.77068     0.78323    0.01255    0.05213  通过
 
-共 74 项，通过 74 项
+共 80 项，通过 80 项

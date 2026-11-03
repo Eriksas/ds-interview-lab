@@ -75,6 +75,31 @@
         }
         return flip ? n - k : k;
       },
+      /* Gamma(k, 1)：Marsaglia–Tsang */
+      gamma(k) {
+        if (k < 1) return r.gamma(k + 1) * Math.pow(u(), 1 / k);
+        const d = k - 1 / 3, c = 1 / Math.sqrt(9 * d);
+        for (;;) {
+          let x, v;
+          do {
+            x = r.normal();
+            v = 1 + c * x;
+          } while (v <= 0);
+          v = v * v * v;
+          const uu = u();
+          if (uu < 1 - 0.0331 * x * x * x * x) return d * v;
+          if (Math.log(uu) < 0.5 * x * x + d * (1 - v + Math.log(v))) return d * v;
+        }
+      },
+      beta(a, b) {
+        const x = r.gamma(a), y = r.gamma(b);
+        return x / (x + y);
+      },
+      /* 取值 1, 2, 3, …，均值 1/p */
+      geometric(p) {
+        if (p >= 1) return 1;
+        return Math.floor(Math.log(1 - u()) / Math.log(1 - p)) + 1;
+      },
       shuffle(arr) {
         for (let i = arr.length - 1; i > 0; i--) {
           const j = Math.floor(u() * (i + 1));

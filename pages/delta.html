@@ -1,0 +1,102 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>比率指标与 Delta 方法 · DS 面试实验室</title>
+<meta name="description" content="随机化单位是用户、分析单位是曝光时，朴素标准误为什么偏小；对比朴素、Delta、Bootstrap 三种标准误。">
+<script>try{var t=localStorage.getItem('dsil.theme');t=t&&JSON.parse(t);if(t==='light'||t==='dark')document.documentElement.setAttribute('data-theme',t)}catch(e){}</script>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.css">
+<link rel="stylesheet" href="../assets/css/site.css">
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.9.0/d3.min.js"></script>
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.js"></script>
+<script defer src="../assets/js/core.js"></script>
+<script defer src="../assets/js/registry.js"></script>
+<script defer src="../assets/js/quiz.js"></script>
+<script defer src="../assets/js/pages/delta.js"></script>
+</head>
+<body data-page="delta">
+<main>
+  <h1>比率指标与 Delta 方法</h1>
+  <p class="subtitle">AB 实验 · 面试频率中 · 约 20 分钟</p>
+
+  <section class="card intuition">
+    <h2><span class="num">1</span>一句话直觉</h2>
+    <p>分流按用户，指标却按曝光算（CTR = 总点击 ÷ 总曝光）。同一个用户的多次曝光会“一起高、一起低”，不是独立样本；把它们当独立的，就高估了样本量，标准误偏小，A/A 实验也会频繁“显著”。</p>
+  </section>
+
+  <section class="card lab">
+    <h2><span class="num">2</span>交互实验 <span class="tag-sim">模拟</span></h2>
+    <p class="note">每个用户的曝光次数不同（有人刷得多），点击倾向也不同（平均 CTR 5%）。比较四种标准误，看谁接近“真实”。</p>
+    <div id="c1"></div>
+    <div class="chart" id="ch1"></div>
+    <div class="readout" id="r1"></div>
+    <p class="note small" id="cap1"></p>
+    <div class="btnrow">
+      <button class="btn primary" id="b1-again" type="button">再模拟一次</button>
+      <button class="btn" id="b1-reset" type="button">重置</button>
+    </div>
+    <h3>每个用户的曝光和点击</h3>
+    <p class="note">Delta 方法看的就是每个点离橙线有多远（C − CTR×N），按<strong>用户</strong>算方差，而不是按曝光。</p>
+    <div class="chart" id="ch2"></div>
+    <div class="tasks">
+      <details class="try"><summary>默认参数下，朴素标准误是真实的多少？A/A 实验用它会有多少假阳性？</summary>
+        <div class="ans">朴素标准误只有真实的约 <strong>78%</strong>，A/A 假阳性约 <strong>12.6%</strong>（名义 5%）；Delta 方法是真实的 99%，假阳性约 5.4%（2,000 次重复）。</div></details>
+      <details class="try"><summary>把“用户之间的差异”拖到 0，朴素标准误还偏小吗？</summary>
+        <div class="ans">基本不偏了（约为真实的 1.0 倍，假阳性约 5.5%）。用户之间没差异时，每次曝光真的可以看成独立的伯努利试验。问题的根源是“同一用户的曝光相关”。</div></details>
+      <details class="try"><summary>恢复默认，把人均曝光从 10 拖到 40，再拖到 2，朴素方法的问题怎么变？</summary>
+        <div class="ans">人均 40 次：朴素标准误只有真实的约 <strong>51%</strong>，A/A 假阳性约 32%；人均 2 次：约 98%，假阳性约 6%。每个用户贡献的曝光越多，“重复”的信息越多，朴素方法高估样本量越严重。</div></details>
+    </div>
+  </section>
+
+  <section class="card formulas">
+    <h2><span class="num">3</span>关键公式</h2>
+    <div class="formula">
+      <div class="texd">\mathrm{CTR}=R=\frac{\sum_i C_i}{\sum_i N_i}=\frac{\bar C}{\bar N}</div>
+      <p class="plain">C_i、N_i 是用户 i 的点击数和曝光数。比率指标是两个“用户平均值”之比。</p>
+    </div>
+    <div class="formula">
+      <div class="texd">\mathrm{SE}_{\text{朴素}}=\sqrt{\frac{R(1-R)}{\sum_i N_i}}</div>
+      <p class="plain">把每次曝光当独立样本，分母用的是总曝光数，用户越“能刷”越偏小。</p>
+    </div>
+    <div class="formula">
+      <div class="texd">\mathrm{Var}(R)\approx\frac{1}{n\,\bar N^2}\Big[\mathrm{Var}(C)-2R\,\mathrm{Cov}(C,N)+R^2\,\mathrm{Var}(N)\Big]=\frac{\mathrm{Var}(C-R\,N)}{n\,\bar N^2}</div>
+      <p class="plain">Delta 方法：对 C̄/N̄ 做一阶泰勒展开。方差和协方差都在<strong>用户层面</strong>算（n 个用户，每人一对 C_i、N_i）。</p>
+    </div>
+    <div class="formula">
+      <div class="texd">\texttt{reg click treat, vce(cluster uid)}</div>
+      <p class="plain">计量的说法：在曝光层面回归、按用户聚类的标准误，和 Delta 方法是一回事（verify 里数值核对过，只差 √(n/(n−1)) 的小样本修正）。</p>
+    </div>
+  </section>
+
+  <section class="card pitch">
+    <h2><span class="num">4</span>面试口述版（30 秒）</h2>
+    <blockquote>当随机化单位是用户、而指标是 CTR 这类比率指标时，分析单位是曝光，同一用户的多次曝光相关，不能当独立样本，否则标准误偏小、假阳性偏高。正确做法是把指标写成两个用户层面均值之比，用 Delta 方法：一阶泰勒展开，Var(R) ≈ Var(C − R·N)/(n·N̄²)，方差都在用户层面算。它只需要中心极限定理，不要求原始数据正态。也可以按用户整体做 Bootstrap 重抽，或者用按用户聚类的回归标准误，三者结果接近；Delta 方法计算最快，平台上最常用。</blockquote>
+  </section>
+
+  <section class="card myths">
+    <h2><span class="num">5</span>常见误区</h2>
+    <ul>
+      <li><span class="wrong">✗ “Delta 方法要求原始数据服从正态分布”。</span><br><span class="right">✓</span> 不要求。它要求的是均值 C̄、N̄ 近似正态，样本量够大时中心极限定理保证这一点。</li>
+      <li><span class="wrong">✗ 做 Bootstrap 时按曝光（每一行）重抽。</span><br><span class="right">✓</span> 要按随机化单位（用户）整体重抽，用户的全部曝光一起进出，才保留了用户内部的相关性。</li>
+      <li><span class="wrong">✗ “人均点击和 CTR 都要用 Delta 方法”。</span><br><span class="right">✓</span> 人均点击 = 总点击 ÷ 用户数，分母是随机化单位，本身就是用户层面的均值，普通 t 检验就行；CTR 的分母（曝光数）是随机的，才需要 Delta 方法。</li>
+      <li><span class="wrong">✗ 用 Bootstrap 判断显著时，看“实验组的值是否落在对照组的区间里”。</span><br><span class="right">✓</span> 每次重抽都算一次“两组之差”，看差值的 95% 区间是否包含 0。</li>
+    </ul>
+  </section>
+
+  <section class="card quiz">
+    <h2><span class="num">6</span>自测题</h2>
+    <div id="quiz-list"></div>
+  </section>
+
+  <section class="card project">
+    <h2><span class="num">7</span>和 X5 项目的联系</h2>
+    <ul>
+      <li>X5 实验按<strong>客户</strong>随机分组，主指标是“客户是否购买”（每个客户一个 0/1），随机化单位和分析单位一致，所以直接用两比例检验就对了（项目里手写的 z 检验和回归 HC1 稳健标准误给出相同结果）。</li>
+      <li>项目的交易流水有 4,500 多万行、每个客户很多笔。如果要比较“每笔交易的平均金额”这种交易层面的比率指标，就必须按客户用 Delta 方法或聚类标准误，不能把每笔交易当独立样本。</li>
+    </ul>
+    <p class="note">依据项目 README 和 <code>results/stage1_ab_test.json</code>。</p>
+  </section>
+</main>
+</body>
+</html>

@@ -31,4 +31,26 @@ if (Lab.sim.power) {
   out['power.null_sig_rate'] = prop(s0.p.filter((p) => p < 0.05).length, s0.p.length);
 }
 
+/* ---------- 页面 2：偷看与序贯检验 ---------- */
+if (Lab.sim.peeking) {
+  const P = Lab.sim.peeking;
+  for (const [tag, n] of [['default', 4000], ['big', 100000]]) {
+    const r = P.peekAA(14, n, 0, 42);
+    out[`peeking.fpr_day7_${tag}`] = prop(Math.round(r.fpr[6] * n), n);
+    out[`peeking.fpr_day14_${tag}`] = prop(Math.round(r.fpr[13] * n), n);
+  }
+  for (const m of ['naive', 'pocock', 'obf']) {
+    for (const [tag, n] of [['default', 20000], ['big', 200000]]) {
+      const r = P.seqSim(P.bounds(m, 5), 0, n, 42);
+      out[`peeking.K5_theta0_${m}_${tag}`] = prop(Math.round(r.reject * n), n);
+    }
+    const r = P.seqSim(P.bounds(m, 5), 2.8, 200000, 42);
+    out[`peeking.K5_theta28_${m}`] = prop(Math.round(r.reject * 200000), 200000);
+  }
+  out['peeking.pocock_K5'] = { value: P.POCOCK[5] };
+  out['peeking.obf_cb_K5'] = { value: P.OBF_CB[5] };
+  out['peeking.pocock_K3'] = { value: P.POCOCK[3] };
+  out['peeking.obf_cb_K3'] = { value: P.OBF_CB[3] };
+}
+
 console.log(JSON.stringify(out, null, 1));

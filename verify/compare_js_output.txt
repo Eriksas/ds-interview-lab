@@ -8,5 +8,22 @@ power.n_calc_default          公式   57760.00000 57760.00000    0.00000    0.0
 power.fdr_pi20_default        模拟       0.20619     0.19149    0.01470    0.08421  通过
 power.fdr_pi20_big            模拟       0.20210     0.19836    0.00374    0.00848  通过
 power.null_sig_rate           模拟       0.05052     0.04953    0.00099    0.00207  通过
+peeking.fpr_day7_default      模拟       0.16650     0.17325    0.00675    0.02519  通过
+peeking.fpr_day14_default     模拟       0.22275     0.22475    0.00200    0.02796  通过
+peeking.fpr_day7_big          模拟       0.16685     0.16560    0.00125    0.00499  通过
+peeking.fpr_day14_big         模拟       0.22095     0.21860    0.00235    0.00556  通过
+peeking.K5_theta0_naive_default模拟       0.14130     0.14415    0.00285    0.01049  通过
+peeking.K5_theta0_naive_big   模拟       0.14309     0.14159    0.00151    0.00331  通过
+peeking.K5_theta28_naive      模拟       0.84904     0.84889    0.00016    0.00340  通过
+peeking.K5_theta0_pocock_default模拟       0.04880     0.05110    0.00230    0.00654  通过
+peeking.K5_theta0_pocock_big  模拟       0.05067     0.05032    0.00036    0.00208  通过
+peeking.K5_theta28_pocock     模拟       0.71021     0.70751    0.00270    0.00431  通过
+peeking.K5_theta0_obf_default 模拟       0.05065     0.04990    0.00075    0.00656  通过
+peeking.K5_theta0_obf_big     模拟       0.05037     0.04940    0.00097    0.00207  通过
+peeking.K5_theta28_obf        模拟       0.78866     0.78773    0.00093    0.00388  通过
+peeking.pocock_K5             公式       2.41320     2.41316    0.00004    0.00010  通过
+peeking.obf_cb_K5             公式       2.04010     2.04006    0.00004    0.00010  通过
+peeking.pocock_K3             公式       2.28950     2.28949    0.00001    0.00010  通过
+peeking.obf_cb_K3             公式       2.00400     2.00400    0.00000    0.00010  通过
 
-共 6 项，通过 6 项
+共 23 项，通过 23 项

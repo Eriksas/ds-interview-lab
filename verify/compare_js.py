@@ -54,12 +54,31 @@ for tag, n_exp in [("default", 2000), ("big", 200000)]:
 eff, p = m1.pvalue_mix(0.0, 2.8, 200000, np.random.default_rng(SEED))
 mc("power.null_sig_rate", *prop(np.sum(p < 0.05), p.size))
 
+# ---------- 页面 2 ----------
+m2 = importlib.import_module("02_peeking")
+for tag, n in [("default", 4000), ("big", 100000)]:
+    f = m2.peek_fpr(14, n, np.random.default_rng(SEED))
+    mc(f"peeking.fpr_day7_{tag}", *prop(round(f[6] * n), n))
+    mc(f"peeking.fpr_day14_{tag}", *prop(round(f[13] * n), n))
+cp5, (cb5, ob5) = m2.pocock(5), m2.obf(5)
+rules = {"naive": [1.959964] * 5, "pocock": [cp5] * 5, "obf": list(ob5)}
+for m, bd in rules.items():
+    for tag, n in [("default", 20000), ("big", 200000)]:
+        rej, _ = m2.seq_sim(bd, 0.0, n, np.random.default_rng(SEED))
+        mc(f"peeking.K5_theta0_{m}_{tag}", *prop(round(rej * n), n))
+    rej, _ = m2.seq_sim(bd, 2.8, 200000, np.random.default_rng(SEED))
+    mc(f"peeking.K5_theta28_{m}", *prop(round(rej * 200000), 200000))
+det("peeking.pocock_K5", cp5, tol=1e-4)
+det("peeking.obf_cb_K5", cb5, tol=1e-4)
+det("peeking.pocock_K3", m2.pocock(3), tol=1e-4)
+det("peeking.obf_cb_K3", m2.obf(3)[0], tol=1e-4)
+
 # ---------- 输出 ----------
 print("浏览器模拟（Node 运行同一份 JS）vs Python（numpy）对照")
 print("公式类：差异 ≤ 容差；模拟类：差异 ≤ 3 × 合并蒙特卡洛标准误\n")
-print(f"{'检查项':<28}{'类型':<6}{'JS':>12}{'Python':>12}{'差异':>11}{'允许':>11}  结果")
+print(f"{'检查项':<38}{'类型':<6}{'JS':>12}{'Python':>12}{'差异':>11}{'允许':>11}  结果")
 for name, kind, a, b, d, tol, ok in rows:
-    print(f"{name:<30}{kind:<4}{a:>12.5f}{b:>12.5f}{d:>11.5f}{tol:>11.5f}  {'通过' if ok else '不通过'}")
+    print(f"{name:<40}{kind:<4}{a:>12.5f}{b:>12.5f}{d:>11.5f}{tol:>11.5f}  {'通过' if ok else '不通过'}")
 bad = [r for r in rows if not r[-1]]
 print(f"\n共 {len(rows)} 项，通过 {len(rows) - len(bad)} 项")
 if bad:

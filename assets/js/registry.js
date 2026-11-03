@@ -13,8 +13,8 @@
   Lab.PAGES = [
     { id: 'power', title: '假设检验与功效', group: 'ab', freq: 3, minutes: 25, ready: true, verify: '01_power',
       desc: '拖动效应量、样本量和 α，看功效怎么变；p 值是什么、不是什么；样本量计算器。' },
-    { id: 'peeking', title: '偷看与序贯检验', group: 'ab', freq: 2, minutes: 20, ready: false, verify: '02_peeking',
-      desc: '每天看一次累计数据，假阳性率涨到多少；Pocock 和 O’Brien-Fleming 门槛。' },
+    { id: 'peeking', title: '偷看与序贯检验', group: 'ab', freq: 2, minutes: 20, ready: true, verify: '02_peeking',
+      desc: "每天看一次累计数据，假阳性率涨到多少；Pocock 和 O'Brien-Fleming 门槛。" },
     { id: 'multiple', title: '多重检验', group: 'ab', freq: 2, minutes: 20, ready: false, verify: '03_multiple',
       desc: 'FWER 和 FDR 的区别；拖动 p 值，对比 Bonferroni 和 BH 各拒绝哪些。' },
     { id: 'cuped', title: 'CUPED 方差缩减', group: 'ab', freq: 2, minutes: 20, ready: false, verify: '04_cuped',

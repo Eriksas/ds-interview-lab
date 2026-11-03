@@ -1,0 +1,121 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>偷看与序贯检验 · DS 面试实验室</title>
+<meta name="description" content="每天看一次累计数据，假阳性率涨到多少；Pocock 和 O'Brien-Fleming 门槛对比。">
+<script>try{var t=localStorage.getItem('dsil.theme');t=t&&JSON.parse(t);if(t==='light'||t==='dark')document.documentElement.setAttribute('data-theme',t)}catch(e){}</script>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.css">
+<link rel="stylesheet" href="../assets/css/site.css">
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.9.0/d3.min.js"></script>
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.js"></script>
+<script defer src="../assets/js/core.js"></script>
+<script defer src="../assets/js/registry.js"></script>
+<script defer src="../assets/js/quiz.js"></script>
+<script defer src="../assets/js/pages/peeking.js"></script>
+</head>
+<body data-page="peeking">
+<main>
+  <h1>偷看与序贯检验</h1>
+  <p class="subtitle">AB 实验 · 面试频率中 · 约 20 分钟</p>
+
+  <section class="card intuition">
+    <h2><span class="num">1</span>一句话直觉</h2>
+    <p>实验还没跑完就天天看结果、一显著就停，相当于多给了自己几次“碰巧越线”的机会，假阳性会越来越高。</p>
+    <p>序贯检验（sequential testing，事先规定好分几次看）给每次分析定一个更严的门槛，让总的假阳性仍然是 5%。</p>
+  </section>
+
+  <section class="card lab">
+    <h2><span class="num">2</span>交互实验</h2>
+
+    <h3>实验 1：A/A 实验，每天看一次 <span class="tag-sim">模拟</span></h3>
+    <p class="note">两组完全一样（没有任何效果），每天新增同样多的用户，每天用累计数据做一次 z 检验。只要某天 |Z|&gt;1.96，就算“误判显著”。</p>
+    <div id="c1"></div>
+    <div class="chart" id="ch1"></div>
+    <div id="lg1a"></div>
+    <p class="note small" id="cap1"></p>
+    <div class="chart" id="ch2"></div>
+    <div id="lg1b"></div>
+    <div class="readout" id="r1"></div>
+    <div class="btnrow">
+      <button class="btn primary" id="b1-again" type="button">再模拟一次</button>
+      <button class="btn" id="b1-reset" type="button">重置</button>
+    </div>
+    <div class="tasks">
+      <details class="try"><summary>把天数拖到 7：至少一次误判显著的比例约多少？独立公式说多少？</summary>
+        <div class="ans">模拟约 <strong>17%</strong>（20 万次模拟为 16.7%），独立公式 1−0.95⁷ 给出 <strong>30%</strong>。公式高估了，因为第 7 天的累计数据包含了前 6 天，几次检验高度相关；但 17% 仍是名义 5% 的三倍多。</div></details>
+      <details class="try"><summary>把天数拖到 30，假阳性率是多少？和 14 天比涨了多少？</summary>
+        <div class="ans">30 天约 <strong>28%</strong>，14 天约 22%（独立公式分别是 79% 和 51%）。看得越多越高，但涨得越来越慢：后面几天的数据和前面越来越像。</div></details>
+      <details class="try"><summary>恢复 14 天，看路径图：那些越过门槛的橙色路径，到最后一天还显著吗？</summary>
+        <div class="ans">大多数不显著了。20 万次模拟里，14 天内曾经越线的路径中约 <strong>77%</strong> 在第 14 天已经回到门槛以内。所谓“显著”只是短暂越线，偷看就是在这种时候停下来。</div></details>
+    </div>
+
+    <h3>实验 2：Pocock 和 O'Brien-Fleming 门槛 <span class="tag-sim">模拟</span></h3>
+    <p class="note">事先定好一共分析 K 次（每次样本量等间隔增加），每次 |Z| 超过门槛就停止并判显著。图里只画上方门槛，下方对称。点圆点看每次的门槛和名义 α。</p>
+    <div id="c2"></div>
+    <div class="chart" id="ch3"></div>
+    <div id="lg2"></div>
+    <div class="tbl-wrap" id="t2"></div>
+    <p class="note small" id="cap2"></p>
+    <div class="btnrow">
+      <button class="btn primary" id="b2-again" type="button">再模拟一次</button>
+      <button class="btn" id="b2-reset" type="button">重置</button>
+    </div>
+    <div class="tasks">
+      <details class="try"><summary>K=5、θ=0（A/A）：每次都用 1.96 的假阳性率是多少？Pocock 和 O'Brien-Fleming 呢？</summary>
+        <div class="ans">每次都用 1.96 约 <strong>14%</strong>；Pocock 和 O'Brien-Fleming 都约 <strong>5%</strong>。两种方法的总 α 一样，只是在各次分析之间分配得不同。</div></details>
+      <details class="try"><summary>把 θ 拖到 2.8（只看一次时功效 80%）：两种序贯方法的功效和平均样本各是多少？</summary>
+        <div class="ans">Pocock 功效约 <strong>71%</strong>、平均用掉 71% 的样本；O'Brien-Fleming 功效约 <strong>79%</strong>、平均用掉 80% 的样本。Pocock 更容易早停，但最后一次门槛 2.41 太高，损失了功效；O'Brien-Fleming 几乎不损失功效，同时还能省两成样本。（“每次都用 1.96”的 85% 不能比，它的假阳性是 14%。）</div></details>
+      <details class="try"><summary>对比 K=5 时第 1 次分析的门槛：Pocock 2.41，O'Brien-Fleming 4.56。这意味着什么？</summary>
+        <div class="ans">O'Brien-Fleming 前期几乎不可能停，除非效应非常大（比如出了严重 bug）；后期门槛降到 2.04，接近 1.96。要和固定样本设计一样有 80% 功效，Pocock 的最大样本量要放大约 <strong>23%</strong>，O'Brien-Fleming 只要约 <strong>3%</strong>。这也是业界更常用 O'Brien-Fleming 型门槛的原因。</div></details>
+    </div>
+  </section>
+
+  <section class="card formulas">
+    <h2><span class="num">3</span>关键公式</h2>
+    <div class="formula">
+      <div class="texd">Z_k=\frac{\sum_{i=1}^{k}X_i}{\sqrt{k}},\qquad \mathrm{Corr}(Z_j,Z_k)=\sqrt{j/k}\quad(j\lt k)</div>
+      <p class="plain">第 k 天的累计统计量包含前几天的数据，所以前后两天高度相关：第 6 天和第 7 天的相关系数是 0.93。</p>
+    </div>
+    <div class="formula">
+      <div class="texd">P\Big(\bigcup_{k=1}^{K}\{|Z_k|>1.96\}\Big)\;\lt\;1-0.95^{K}</div>
+      <p class="plain">1−0.95ᴷ 假设每次检验独立，实际会高估膨胀程度；但真实值仍远高于 5%。</p>
+    </div>
+    <div class="formula">
+      <div class="texd">\text{Pocock：}\ |Z_k|>C_P(K,\alpha)\quad\text{对每个}\ k</div>
+      <p class="plain">每次门槛一样。K=5 时 C_P=2.413，相当于每次只用 0.016 的名义 α。</p>
+    </div>
+    <div class="formula">
+      <div class="texd">\text{O'Brien-Fleming：}\ |Z_k|>C_B(K,\alpha)\sqrt{K/k}</div>
+      <p class="plain">越早门槛越高，最后一次接近 1.96。K=5 时依次为 4.56、3.23、2.63、2.28、2.04。</p>
+    </div>
+    <div class="formula">
+      <div class="texd">\alpha(t)=2-2\,\Phi\!\left(\frac{z_{1-\alpha/2}}{\sqrt{t}}\right)</div>
+      <p class="plain">α 消耗函数（alpha spending，Lan-DeMets 的 O'Brien-Fleming 型）：t 是已用样本占计划样本的比例，α(t) 是到此为止最多能“花掉”的假阳性。用它就不必事先固定看几次、什么时候看。</p>
+    </div>
+  </section>
+
+  <section class="card pitch">
+    <h2><span class="num">4</span>面试口述版（30 秒）</h2>
+    <blockquote>每天看累计数据、一显著就停，等于做了多次检验，假阳性会膨胀。模拟 7 天每天看一次，假阳性约 17%；独立公式 1−0.95⁷=30% 高估了，因为累计数据前后高度相关，但无论如何都远超 5%。解决办法一是事先定好样本量，只在最后做一次检验；二是用序贯检验把 α 分配到各次分析：Pocock 每次门槛一样，早停容易但最后门槛高、功效损失大；O'Brien-Fleming 前期门槛很高、最后接近 1.96，几乎不损失功效，所以更常用。实际平台还会用 α 消耗函数，或者 mSPRT 这类“随时可看”的方法。</blockquote>
+  </section>
+
+  <section class="card myths">
+    <h2><span class="num">5</span>常见误区</h2>
+    <ul>
+      <li><span class="wrong">✗ “每天看一次，7 天的假阳性是 1−0.95⁷=30%”。</span><br><span class="right">✓</span> 这个公式要求 7 次检验相互独立。累计数据前后高度相关，模拟结果约 17%。方向对（会膨胀），数字不对。</li>
+      <li><span class="wrong">✗ “序贯检验要求各次检验相互独立，总置信水平等于各次相乘”。</span><br><span class="right">✓</span> 正好相反：各次检验不独立（相关系数 √(j/k)），所以不能相乘；序贯检验正是利用这个相关结构，用多元正态分布算出门槛。</li>
+      <li><span class="wrong">✗ “实验期间不能看数据”。</span><br><span class="right">✓</span> 可以看，也应该看：排查 bug、检查分流比例（SRM）、盯护栏指标。不能做的是“看到显著就停、就下结论”。</li>
+      <li><span class="wrong">✗ “序贯检验能白白省样本”。</span><br><span class="right">✓</span> 有效果时平均能早停；但为了保住功效，最大样本量要比固定设计大（K=5 时 Pocock 约 +23%，O'Brien-Fleming 约 +3%），没效果时基本要跑满。</li>
+      <li><span class="wrong">✗ “提前停下来时测到的提升就是真实提升”。</span><br><span class="right">✓</span> 提前停往往发生在数据碰巧偏高的时候，效应会被高估，推全后常常缩水（见“实验结果的陷阱”页的赢家诅咒）。</li>
+    </ul>
+  </section>
+
+  <section class="card quiz">
+    <h2><span class="num">6</span>自测题</h2>
+    <div id="quiz-list"></div>
+  </section>
+</main>
+</body>
+</html>

@@ -23,7 +23,7 @@
       desc: '只看付费用户的选择偏差、放量时的辛普森悖论、赢家诅咒、新奇效应。' },
     { id: 'delta', title: '比率指标与 Delta 方法', group: 'ab', freq: 2, minutes: 20, ready: true, verify: '08_delta',
       desc: '按用户分流、按曝光算指标时，朴素标准误为什么偏小；Delta 与 Bootstrap。' },
-    { id: 'did', title: '双重差分 DID', group: 'causal', freq: 3, minutes: 30, ready: false, verify: '10_did',
+    { id: 'did', title: '双重差分 DID', group: 'causal', freq: 3, minutes: 30, ready: true, verify: '10_did',
       desc: '平行趋势被破坏时估计偏多少；事件研究图；交错上线时 TWFE 的偏误。' },
     { id: 'psm', title: '倾向得分匹配 PSM', group: 'causal', freq: 3, minutes: 25, ready: false, verify: '11_psm',
       desc: '倾向得分重叠、卡钳、有放回与无放回的偏差-方差取舍、SMD 平衡图。' },

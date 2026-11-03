@@ -169,4 +169,21 @@ if (Lab.sim.clt) {
   out['clt.exp30_sd'] = { value: sd, se: sd / Math.sqrt(2 * 19999) };
 }
 
+
+/* ---------- 页面 10：DID ---------- */
+if (Lab.sim.did) {
+  const D = Lab.sim.did;
+  for (const [nv, b, g] of [[0, 1, 0.5], [0, 0, 1], [1, 1, 0.5], [1, 0, 1], [0, 1, 0]]) {
+    const r = D.stagger(b, g, !!nv);
+    out[`did.stagger_never${nv}_b${b}_g${g}_twfe`] = { value: r.twfe };
+    out[`did.stagger_never${nv}_b${b}_g${g}_att`] = { value: r.att };
+    out[`did.stagger_never${nv}_b${b}_g${g}_cs`] = { value: r.cs };
+  }
+  // 2×2 DID 偏差：重复 400 次取平均，和理论 6s 比
+  let sum = 0, sum2 = 0;
+  for (let i = 0; i < 2000; i++) { const e = D.did2x2(D.panel2(30, 0.2, 2, 1000 + i)) - 2; sum += e; sum2 += e * e; }
+  const m = sum / 2000, sd = Math.sqrt(sum2 / 2000 - m * m);
+  out['did.bias_s02_mean'] = { value: m, se: sd / Math.sqrt(2000) };
+}
+
 console.log(JSON.stringify(out, null, 1));

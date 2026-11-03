@@ -1,0 +1,121 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>双重差分 DID · DS 面试实验室</title>
+<meta name="description" content="拖动处理组的事前趋势，看平行趋势被破坏时估计偏多少；事件研究图；交错上线时 TWFE 的偏误。">
+<script>try{var t=localStorage.getItem('dsil.theme');t=t&&JSON.parse(t);if(t==='light'||t==='dark')document.documentElement.setAttribute('data-theme',t)}catch(e){}</script>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.css">
+<link rel="stylesheet" href="../assets/css/site.css">
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.9.0/d3.min.js"></script>
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.js"></script>
+<script defer src="../assets/js/core.js"></script>
+<script defer src="../assets/js/registry.js"></script>
+<script defer src="../assets/js/quiz.js"></script>
+<script defer src="../assets/js/pages/did.js"></script>
+</head>
+<body data-page="did">
+<main>
+  <h1>双重差分 DID</h1>
+  <p class="subtitle">因果推断 · 面试频率高 · 约 30 分钟</p>
+
+  <section class="card intuition">
+    <h2><span class="num">1</span>一句话直觉</h2>
+    <p>处理组前后的变化里，既有策略的效果，也有“大环境本来就在变”；用对照组同期的变化把后者减掉，剩下的就是效果。前提是：没有策略时，两组本来会走平行的路。</p>
+  </section>
+
+  <section class="card lab">
+    <h2><span class="num">2</span>交互实验 <span class="tag-sim">模拟</span></h2>
+
+    <h3>实验 1：平行趋势被破坏时，DID 偏多少</h3>
+    <p class="note">处理组和对照组各 30 个单位（比如城市），观察 12 期，第 0 期开始处理。两组水平本来就不同（处理组高 1），这没关系；关键是趋势。</p>
+    <div id="c1"></div>
+    <div class="chart" id="ch1"></div>
+    <div id="lg1"></div>
+    <div class="readout" id="r1"></div>
+    <h3>实验 2：事件研究图（同一份数据）</h3>
+    <p class="note">每一期都估计一个“处理组 − 对照组”的差异（相对第 −1 期）。事前的系数应该在 0 附近；事后的系数就是每一期的效应。</p>
+    <div class="chart" id="ch2"></div>
+    <p class="note" id="cap2"></p>
+    <div class="btnrow">
+      <button class="btn primary" id="b1-again" type="button">再模拟一次</button>
+      <button class="btn" id="b1-reset" type="button">重置</button>
+    </div>
+    <div class="tasks">
+      <details class="try"><summary>把“事前每期多涨”拖到 +0.2：DID 估计偏多少？事件研究图有什么变化？</summary>
+        <div class="ans">理论上偏 <strong>+1.2</strong>（0.2 × 事后与事前的平均时间差 6 期），seed 42 的模拟估计是 3.23（真实 2）。事件研究图里事前系数排成一条上升的斜线（第 −6 期约 −1.0），一眼就能看出平行趋势不成立。</div></details>
+      <details class="try"><summary>保持 +0.2，再把真实效应拖到 0。DID 会得出什么结论？</summary>
+        <div class="ans">DID 估计约 <strong>1.2</strong>，而且非常显著（verify 里按单位聚类的回归 p 值约 10⁻⁴⁷），但真实效应是 0：它把处理组自己的上升趋势当成了策略效果。显著不等于因果，前提假设不成立时越显著越危险。</div></details>
+      <details class="try"><summary>把“事前每期多涨”拖到 −0.1，偏差是什么方向？</summary>
+        <div class="ans">偏 <strong>−0.6</strong>，会低估效果。偏差的方向取决于处理组的趋势比对照组快还是慢。</div></details>
+    </div>
+
+    <h3>实验 3：分批上线时，双向固定效应（TWFE）的偏误</h3>
+    <p class="note">新功能分两批上线：一批城市第 4 期上线，另一批第 8 期上线。上线后效应会随时间增长。数值是无噪声的期望值。</p>
+    <div id="c3"></div>
+    <div class="chart" id="ch3"></div>
+    <div id="lg3"></div>
+    <div class="readout" id="r3"></div>
+    <div class="chart" id="ch4"></div>
+    <div id="lg4"></div>
+    <div class="btnrow"><button class="btn" id="b3-reset" type="button">重置</button></div>
+    <div class="tasks">
+      <details class="try"><summary>把“效应每期增长”拖到 0（效应恒定），TWFE 准吗？</summary>
+        <div class="ans">准：TWFE = 真实 ATT = 1.00。效应不随时间变化时，分批上线不会让 TWFE 出问题。</div></details>
+      <details class="try"><summary>默认（刚上线 1、每期 +0.5、没有从未上线组）：TWFE 和真实 ATT 各是多少？</summary>
+        <div class="ans">TWFE 只有 <strong>0.75</strong>，真实 ATT 是 <strong>2.20</strong>。原因：晚上线组上线后，TWFE 会把早上线组当成“对照组”，而早上线组的效应还在增长，“对照组”的变化里混进了效应，晚上线组的效应就被减小了。</div></details>
+      <details class="try"><summary>把“刚上线时的效应”拖到 0、增长拖到 1.0，会发生什么？再切到“有从未上线组”。</summary>
+        <div class="ans">没有从未上线组时，TWFE 是 <strong>−0.50</strong>，方向都反了（真实 ATT 2.40）。有从未上线组时 TWFE 是 1.09，仍然偏小一半多；而 Callaway-Sant'Anna 思路（每批只和从未上线 / 尚未上线的组比）得到 2.40，等于真实值。</div></details>
+    </div>
+  </section>
+
+  <section class="card formulas">
+    <h2><span class="num">3</span>关键公式</h2>
+    <div class="formula">
+      <div class="texd">\hat\tau_{DID}=\big(\bar Y_{T,\text{后}}-\bar Y_{T,\text{前}}\big)-\big(\bar Y_{C,\text{后}}-\bar Y_{C,\text{前}}\big)</div>
+      <p class="plain">处理组的前后变化，减去对照组的前后变化。等价于回归 <code>reghdfe y treat_post, absorb(id t) vce(cluster id)</code> 里的系数。</p>
+    </div>
+    <div class="formula">
+      <div class="texd">\text{偏差}=s\cdot\big(\bar t_{\text{后}}-\bar t_{\text{前}}\big)</div>
+      <p class="plain">s 是处理组事前每期多出的趋势。实验 1 里事后平均时期 2.5、事前 −3.5，差 6 期，所以偏差 = 6s。</p>
+    </div>
+    <div class="formula">
+      <div class="texd">Y_{it}=\alpha_i+\lambda_t+\sum_{k\ne -1}\beta_k\,\mathbf 1[t-g_i=k]+\varepsilon_{it}</div>
+      <p class="plain">事件研究：单位固定效应 α、时间固定效应 λ，加上相对处理时间的哑变量，以 −1 期为基准。要看<strong>所有</strong>事前 β。</p>
+    </div>
+    <div class="formula">
+      <div class="texd">Y_{it}=\alpha_i+\lambda_t+\beta\,D_{it}+\varepsilon_{it}</div>
+      <p class="plain">交错上线时的 TWFE。β 是很多个 2×2 DID 的加权平均，其中包括“晚处理组 vs 已经处理的早处理组”这种比较（Goodman-Bacon 分解）；效应随时间变化时，这部分会产生偏误，甚至让 β 变号。</p>
+    </div>
+  </section>
+
+  <section class="card pitch">
+    <h2><span class="num">4</span>面试口述版（30 秒）</h2>
+    <blockquote>DID 用对照组同期的变化去掉时间趋势：处理组前后差减去对照组前后差。核心假设是平行趋势，也就是没有处理时两组的变化相同；另外要求没有预期效应，处理组不会提前反应，以及两组之间没有溢出。检验上我会画事件研究图，看所有事前系数是否都在 0 附近，但不显著不等于平行趋势成立，事前样本少时检验功效很低。如果是分批上线，而且效应随时间变化，传统的双向固定效应回归会把已经处理的组当对照，可能严重偏误甚至变号，这时要用 Callaway-Sant'Anna、Sun-Abraham 或插补法这类异质性稳健的估计。</blockquote>
+  </section>
+
+  <section class="card myths">
+    <h2><span class="num">5</span>常见误区</h2>
+    <ul>
+      <li><span class="wrong">✗ “DID 要求处理组和对照组水平相同”。</span><br><span class="right">✓</span> 不要求水平相同，水平差会被差分掉（实验 1 里处理组一直高 1）。要求的是没有处理时<strong>趋势</strong>平行。</li>
+      <li><span class="wrong">✗ 把假设说成含糊的“线性关系假设”。</span><br><span class="right">✓</span> 关键假设是：平行趋势、无预期效应（处理组不会提前改变行为）、无溢出（对照组不受处理影响），以及样本构成稳定。</li>
+      <li><span class="wrong">✗ 事件研究只看 −1 期或挑几期。</span><br><span class="right">✓</span> 要看所有事前系数的整体形态，一条斜线比单个点显著更说明问题。</li>
+      <li><span class="wrong">✗ “事前系数都不显著，所以平行趋势成立”。</span><br><span class="right">✓</span> 只能说没发现违背的证据；事前期数少、噪声大时检验功效很低。可以补充敏感性分析（假设趋势差有多大时结论会被推翻）。</li>
+      <li><span class="wrong">✗ “分批上线直接跑 TWFE 就行”。</span><br><span class="right">✓</span> 效应随时间变化时 TWFE 可能严重偏误（实验 3）。Stata 里可以用 csdid（Callaway-Sant'Anna）、did_imputation（插补法）、eventstudyinteract（Sun-Abraham）等命令。</li>
+      <li><span class="wrong">✗ “挑两个城市，一个上线一个不上线，做 DID”。</span><br><span class="right">✓</span> 有效样本只有 2 个，城市自己的冲击无法和策略效果分开，也算不出可靠的标准误。尽量多城市随机，或者用合成控制法。</li>
+    </ul>
+  </section>
+
+  <section class="card quiz">
+    <h2><span class="num">6</span>自测题</h2>
+    <div id="quiz-list"></div>
+  </section>
+
+  <section class="card project">
+    <h2><span class="num">7</span>和 X5 项目的联系</h2>
+    <p>X5 短信是<strong>随机</strong>发送的（随机化检验通过），可以直接比较两组，不需要 DID。如果短信是按门店分批推送、没有随机分组，就需要 DID：用没推送的门店做对照，检查推送前的趋势，分批推送时还要用异质性稳健的方法。面试里可以把这当成“如果没有随机实验，你会怎么做”的回答。</p>
+  </section>
+</main>
+</body>
+</html>

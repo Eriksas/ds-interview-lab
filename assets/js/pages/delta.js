@@ -63,7 +63,7 @@
 
   function init() {
     let seed = 42;
-    const REPS = 400, B = 200;
+    const B = 200;
     const ctl = Lab.controls('#c1', [
       { key: 'n', label: '每组用户数', min: 200, max: 5000, scale: 'log', value: 1000, round: (v) => Math.round(v / 100) * 100, fmt: F.int },
       { key: 'm', label: '人均曝光次数', min: 1, max: 50, step: 1, value: 10, fmt: (v) => v + ' 次' },
@@ -77,6 +77,7 @@
       const r = Lab.rng(seed);
       const d = D.gen(v.n, v.m, v.sd, r);
       const se = { naive: D.seNaive(d), delta: D.seDelta(d), boot: D.seBoot(d, B, r) };
+      const REPS = Math.round(Lab.clamp(400000 / v.n, 100, 400)); // 用户多时减少重复次数，手机上也不卡
       const ex = D.experiment(v.n, v.m, v.sd, REPS, seed + 7);
       const rows = [
         { k: '朴素（每次曝光当独立）', v: se.naive, col: 'var(--bad)' },
@@ -100,7 +101,7 @@
         Lab.stat('Delta ÷ 真实', (se.delta / ex.true).toFixed(2), 'good') +
         Lab.stat('A/A 假阳性：朴素', F.pct(ex.fprNaive, 1), ex.fprNaive > 0.08 ? 'bad' : '') +
         Lab.stat('A/A 假阳性：Delta', F.pct(ex.fprDelta, 1), 'hl');
-      Lab.$('#cap1').textContent = `“真实”标准误和假阳性率来自重复 ${REPS} 次 A/A 实验（两组都没有效果），本身也有约 ±4% 的模拟误差；Bootstrap 重抽 ${B} 次。verify 里用 2,000 次重复得到的是：朴素约为真实的 0.78，Delta 约 0.99。`;
+      Lab.$('#cap1').textContent = `“真实”标准误和假阳性率来自重复 ${REPS} 次 A/A 实验（两组都没有效果），本身也有约 ±${Math.round(100 / Math.sqrt(2 * REPS))}% 的模拟误差；Bootstrap 重抽 ${B} 次。verify 里用 2,000 次重复得到的是：朴素约为真实的 0.78，Delta 约 0.99。`;
       scatter(d);
     }
 

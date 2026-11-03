@@ -25,7 +25,7 @@
 ## 数字的准确性
 - 页面里写死的结论性数字必须来自 `verify/` 下 Python 脚本的输出（seed 42，输出存为同名 `_output.txt` 一并提交）。
 - Python：`E:/retail-uplift-ab/.venv/Scripts/python.exe`（numpy、scipy、statsmodels、sklearn）。
-- 浏览器实时模拟要和 Python 对得上：`verify/js_sims.js` 用 Node 加载页面里同一份模拟代码跑默认参数，`verify/compare_js.py` 和 numpy 结果比较（差异 < 3 倍蒙特卡洛标准误），输出 `verify/compare_js_output.txt`。方法写在 `verify/README.md`。
+- 浏览器实时模拟要和 Python 对得上：`verify/js_sims.js` 用 Node 加载页面里同一份模拟代码跑默认参数，`verify/compare_js.py` 和 numpy 结果比较（差异 < 4 倍蒙特卡洛标准误；检查项上百，3 倍会有多重比较误报），输出 `verify/compare_js_output.txt`。方法写在 `verify/README.md`。
 - 重新生成全部输出：在仓库根目录运行 `E:/retail-uplift-ab/.venv/Scripts/python.exe verify/run_all.py`。
 
 ## 技术

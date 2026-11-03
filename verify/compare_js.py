@@ -3,7 +3,8 @@
 做法：
 1. `node verify/js_sims.js` 加载网页里同一份 JS（assets/js/core.js + pages/*.js），按页面默认参数、seed 42 运行；
 2. 本脚本用 numpy（default_rng(42)）独立实现同样的模拟；
-3. 确定性的量（公式）要求差异 < 1e-6；随机模拟的量要求 |JS − Python| < 3 × 合并蒙特卡洛标准误。
+3. 确定性的量（公式）要求差异 < 1e-6；随机模拟的量要求 |JS − Python| < 4 × 合并蒙特卡洛标准误。
+   （模拟类检查有上百项，用 3 倍标准误时纯靠运气也会有约 0.3 项“不通过”，这正是多重检验问题；4 倍时约 0.006 项。）
 JS 用 mulberry32 随机数、Python 用 PCG64，两边随机数序列不同，所以比的是“分布一致”，不是逐个数相等。
 
 运行：E:/retail-uplift-ab/.venv/Scripts/python.exe verify/compare_js.py
@@ -33,8 +34,8 @@ def det(name, py_value, tol=1e-6):
 def mc(name, py_value, py_se):
     j = js[name]
     se = float(np.hypot(j["se"], py_se))
-    ok = abs(j["value"] - py_value) <= 3 * se
-    rows.append((name, "模拟", j["value"], py_value, abs(j["value"] - py_value), 3 * se, ok))
+    ok = abs(j["value"] - py_value) <= 4 * se
+    rows.append((name, "模拟", j["value"], py_value, abs(j["value"] - py_value), 4 * se, ok))
 
 
 def prop(k, n):
@@ -196,9 +197,23 @@ ms = m9.draw("exp", (20000, 30), np.random.default_rng(SEED)).mean(axis=1)
 mc("clt.exp30_mean", ms.mean(), ms.std(ddof=1) / np.sqrt(20000))
 mc("clt.exp30_sd", ms.std(ddof=1), ms.std(ddof=1) / np.sqrt(2 * 19999))
 
+
+# ---------- 页面 10 ----------
+m10 = importlib.import_module("10_did")
+for nv, b, g in [(0, 1, 0.5), (0, 0, 1), (1, 1, 0.5), (1, 0, 1), (0, 1, 0)]:
+    cohorts, Dm, tau = m10.stagger(b, g, bool(nv))
+    lvl = np.array([10, 9, 8][: len(cohorts)])[:, None]
+    Y = lvl + 0.3 * np.arange(1, m10.T + 1)[None, :] + tau * Dm
+    det(f"did.stagger_never{nv}_b{b}_g{g}_twfe", m10.twfe_demean(Dm, Y), tol=1e-9)
+    det(f"did.stagger_never{nv}_b{b}_g{g}_att", tau[Dm == 1].mean(), tol=1e-9)
+    det(f"did.stagger_never{nv}_b{b}_g{g}_cs", np.mean([c[2] for c in m10.cs(cohorts, Y, Dm)]), tol=1e-9)
+rng10 = np.random.default_rng(SEED)
+errs = np.array([m10.did2x2(m10.panel2(30, 0.2, 2.0, rng10)) - 2.0 for _ in range(2000)])
+mc("did.bias_s02_mean", errs.mean(), errs.std(ddof=1) / np.sqrt(2000))
+
 # ---------- 输出 ----------
 print("浏览器模拟（Node 运行同一份 JS）vs Python（numpy）对照")
-print("公式类：差异 ≤ 容差；模拟类：差异 ≤ 3 × 合并蒙特卡洛标准误\n")
+print("公式类：差异 ≤ 容差；模拟类：差异 ≤ 4 × 合并蒙特卡洛标准误（上百项一起检查，用 4 倍避免多重比较误报）\n")
 print(f"{'检查项':<38}{'类型':<6}{'JS':>12}{'Python':>12}{'差异':>11}{'允许':>11}  结果")
 for name, kind, a, b, d, tol, ok in rows:
     print(f"{name:<40}{kind:<4}{a:>12.5f}{b:>12.5f}{d:>11.5f}{tol:>11.5f}  {'通过' if ok else '不通过'}")
